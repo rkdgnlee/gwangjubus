@@ -1,20 +1,89 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { favoriteStorage } from "../utils/favoriteStorage";
 import { FavoriteBus } from "../types/favorite";
-import { FlatList, Text, View, StyleSheet, TouchableOpacity, SafeAreaView } from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity, SafeAreaView, Animated, Easing } from "react-native";
 import MyContainer from "./My/MyContainer";
-import InBusContainer from "./InBus/InBusContainer";
+import CityBusContainer from "./CityBus/CityBusContainer";
+import SettingsContainer from "./Settings/SettingsContainer";
 
 interface MainProps {
   cityName: string;
+  onReset: () => void;
 }
 
 // 탭 타입 정의
 type TabType = 'My' | 'CityBus' | 'ExpressBus' | 'Settings';
 
-const MainScreen = ({ cityName }: MainProps) => {
+// 탭 버튼 컴포넌트 (애니메이션 적용)
+const TabButton = ({ 
+  tab, 
+  isActive, 
+  onPress 
+}: { 
+  tab: TabType; 
+  isActive: boolean; 
+  onPress: () => void 
+}) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current; // 크기 애니메이션 값
+
+  useEffect(() => {
+    if (isActive) {
+      // 활성화될 때: 커졌다가 작아지는 젤리 효과
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 0.8,
+          duration: 50,
+          useNativeDriver: true,
+          easing: Easing.ease,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1.1,
+          friction: 3,
+          tension: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        })
+      ]).start();
+    } else {
+      scaleAnim.setValue(1);
+    }
+  }, [isActive]);
+
+  // 탭별 아이콘/라벨 설정
+  const config = {
+    My: { icon: "🏠", label: "홈" },
+    CityBus: { icon: "🚌", label: "시내버스" },
+    ExpressBus: { icon: "🎫", label: "고속버스" },
+    Settings: { icon: "⚙️", label: "설정" },
+  };
+
+  const { icon, label } = config[tab];
+  const activeColor = isActive ? "#191F28" : "#B0B8C1"; // Toss Black vs Gray
+
+  return (
+    <TouchableOpacity
+      style={styles.tabButton}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <Text style={[styles.tabIcon, { color: activeColor }]}>{icon}</Text>
+      </Animated.View>
+      <Text style={[styles.tabText, { color: activeColor, fontWeight: isActive ? '700' : '500' }]}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+};
+
+const MainScreen = ({ cityName, onReset }: MainProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('My');
   const [favorites, setFavorites] = useState<FavoriteBus[]>([]);
+  const [cityBusInitData, setCityBusInitData] = useState<{ type: 'bus' | 'stop', data: any } | null>(null);
 
   useEffect(() => {
     loadFavorites();
@@ -25,16 +94,25 @@ const MainScreen = ({ cityName }: MainProps) => {
     setFavorites(data);
   };
 
+  // My탭 등에서 버스/정류장 상세 화면으로 이동 요청 처리
+  const handleNavigationRequest = (type: 'bus' | 'stop', data: any) => {
+    setCityBusInitData({ type, data }); // CityBusContainer에 전달할 데이터 설정
+    setActiveTab('CityBus'); // 탭 전환
+  };
+
   // 탭에 따라 보여줄 화면 렌더링
   const renderContent = () => {
     switch (activeTab) {
       case 'My':
         return (
-          <MyContainer />
+          <MyContainer onNavigate={handleNavigationRequest} />
         );
       case 'CityBus':
         return (
-          <InBusContainer cityName={cityName} />
+          <CityBusContainer 
+            cityName={cityName} 
+            initialData={cityBusInitData} 
+          />
         );
       case 'ExpressBus':
         return (
@@ -45,43 +123,46 @@ const MainScreen = ({ cityName }: MainProps) => {
         );
       case 'Settings':
         return (
-          <View style={styles.centerContainer}>
-            <Text style={styles.placeholderText}>설정</Text>
-            <Text style={{ marginTop: 10, color: '#666' }}>현재 지역: {cityName}</Text>
-          </View>
+          <SettingsContainer cityName={cityName} onChangeRegion={onReset} />
         );
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* 메인 콘텐츠 영역 */}
-      <View style={styles.contentArea}>
-        {renderContent()}
-      </View>
+    <>
+      {/* 1. 상단 상태바 배경 (민트색) - flex: 0으로 영역만 차지 */}
+      <SafeAreaView style={{ flex: 0, backgroundColor: '#F5FBF6' }} />
+      
+      {/* 2. 메인 화면 (하단 Safe Area는 바텀바와 같은 흰색으로 처리) */}
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+        <View style={styles.container}>
+          {/* 메인 콘텐츠 영역 */}
+          <View style={styles.contentArea}>
+            {renderContent()}
+          </View>
 
-      {/* 커스텀 바텀 네비게이션 바 */}
-      <View style={styles.bottomNav}>
-        {['My', 'CityBus', 'ExpressBus', 'Settings'].map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            style={styles.tabButton}
-            onPress={() => setActiveTab(tab as TabType)}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-              {tab === 'My' ? 'MY' : tab === 'CityBus' ? '시내버스' : tab === 'ExpressBus' ? '고속버스' : '설정'}
-            </Text>
-            {activeTab === tab && <View style={styles.activeIndicator} />}
-          </TouchableOpacity>
-        ))}
-      </View>
-    </SafeAreaView>
+          {/* 커스텀 바텀 네비게이션 바 */}
+          <View style={styles.bottomNav}>
+            {(['My', 'CityBus', 'ExpressBus', 'Settings'] as TabType[]).map((tab) => (
+              <TabButton
+                key={tab}
+                tab={tab}
+                isActive={activeTab === tab}
+                onPress={() => {
+                  setActiveTab(tab);
+                  if (tab !== 'CityBus') setCityBusInitData(null); // 다른 탭 가면 초기화
+                }}
+              />
+            ))}
+          </View>
+        </View>
+      </SafeAreaView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F2F4F6' }, // 전체 배경색 변경
+  container: { flex: 1, backgroundColor: '#F5FBF6' }, // 민트 테마 배경
   contentArea: { flex: 1 },
   tabContent: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -90,28 +171,23 @@ const styles = StyleSheet.create({
   // 바텀 네비게이션 스타일
   bottomNav: {
     flexDirection: 'row',
-    height: 65,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    height: 60, // 높이를 컴팩트하게 조정
     backgroundColor: '#fff',
-    paddingBottom: 5,
+    alignItems: 'center', // 세로 중앙 정렬
+    justifyContent: 'space-around',
+    
+    // 상단에만 은은한 경계선/그림자 주기
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 }, // iOS: 위쪽으로 살짝 그림자
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    borderTopWidth: 1, // Android/iOS 공통: 상단 경계선 추가
+    borderTopColor: '#f0f0f0',
+    elevation: 0, // Android: 하단 그림자 제거
   },
   tabButton: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  tabText: {
-    fontSize: 13,
-    color: '#aaa',
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  activeTabText: { color: '#000', fontWeight: 'bold' },
-  activeIndicator: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#000',
-    position: 'absolute',
-    bottom: 10,
-  }
+  tabIcon: { fontSize: 24, marginBottom: 4 }, // 아이콘 크기
+  tabText: { fontSize: 11 },
 });
 
 export default MainScreen;

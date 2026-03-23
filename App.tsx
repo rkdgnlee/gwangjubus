@@ -30,7 +30,7 @@ const App = () => {
 
   // 데이터가 있으면 메인, 없으면 지역 선택 화면
   return savedCity ? (
-    <MainScreen cityName={savedCity} />
+    <MainScreen cityName={savedCity} onReset={() => setSavedCity(null)} />
   ) : (
     <RegionSelectScreen onComplete={checkStorage} /> 
     // 저장 후 checkStorage를 다시 호출하게 하여 화면을 전환함

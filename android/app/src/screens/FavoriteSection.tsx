@@ -10,20 +10,7 @@ const FAVORITES = [
   { id: '5', title: '본가', type: 'BUS', busName: '송정19', stopName: '광주송정역', direction: '공항 방면' },
 ];
 
-interface Props {
-  onNavigate: (type: 'bus' | 'stop', data: any) => void;
-}
-
-const FavoriteSection = ({ onNavigate }: Props) => {
-  const handlePress = (item: any) => {
-    // 더미 데이터를 상세 화면 포맷에 맞게 변환하여 전달
-    if (item.type === 'BUS') {
-      onNavigate('bus', { id: item.id, name: item.busName, type: '간선', direction: item.direction });
-    } else {
-      onNavigate('stop', { id: item.id, name: item.stopName, direction: item.direction });
-    }
-  };
-
+const FavoriteSection = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.headerTitle}>즐겨찾기</Text>
@@ -34,21 +21,18 @@ const FavoriteSection = ({ onNavigate }: Props) => {
         columnWrapperStyle={styles.row}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={() => handlePress(item)}>
+          <TouchableOpacity style={styles.card} activeOpacity={0.7}>
             <View style={styles.cardHeader}>
               <Text style={styles.emoji}>{item.type === 'BUS' ? '🚌' : '🚏'}</Text>
               <Text style={styles.userTitle}>{item.title}</Text>
             </View>
             
             <View style={styles.infoContainer}>
-              {item.type === 'BUS' ? (
-                <>
-                  <Text style={styles.busName}>{item.busName}</Text>
-                  <Text style={styles.stopName}>{item.stopName}</Text>
-                </>
-              ) : (
-                <Text style={[styles.busName, { color: '#333' }]}>{item.stopName}</Text>
+              {item.type === 'BUS' && (
+                <Text style={styles.busName}>{item.busName}</Text>
               )}
+              <Text style={styles.stopName}>{item.stopName}</Text>
+              <Text style={styles.direction}>{item.direction}</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -69,7 +53,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#191F28', // Toss Black
     marginBottom: 15,
-    marginTop: 24,
   },
   listContent: {
     paddingBottom: 10,
@@ -80,22 +63,22 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 12,
+    borderRadius: 20,
+    padding: 18,
     width: '48%', // 2열 배치
-    aspectRatio: 4 / 3, // 4:3 비율 고정
-    elevation: 1, // 안드로이드 그림자
+    elevation: 2, // 안드로이드 그림자
     shadowColor: '#000', // iOS 그림자
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
   },
-  cardHeader: { marginBottom: 8 },
-  emoji: { fontSize: 22, marginBottom: 4 },
-  userTitle: { fontSize: 16, fontWeight: '700', color: '#333' },
+  cardHeader: { marginBottom: 12 },
+  emoji: { fontSize: 24, marginBottom: 8 },
+  userTitle: { fontSize: 17, fontWeight: '700', color: '#333' },
   infoContainer: { marginTop: 'auto' }, // 내용을 아래로 밀착
-  busName: { fontSize: 18, fontWeight: '700', color: '#2E7D32', marginBottom: 2 },
-  stopName: { fontSize: 13, color: '#4E5968', fontWeight: '500' },
+  busName: { fontSize: 15, fontWeight: '600', color: '#2E7D32', marginBottom: 2 }, // 가독성 좋은 진한 녹색
+  stopName: { fontSize: 14, color: '#4E5968', fontWeight: '500' },
+  direction: { fontSize: 12, color: '#8B95A1', marginTop: 2 },
 });
 
 export default FavoriteSection;

@@ -28,9 +28,10 @@ interface BusRouteDetailProps {
   busInfo: any;
   cityName: string;
   onBack: () => void;
+  onStopPress: (stopInfo: any) => void;
 }
 
-const BusRouteDetail = ({ busInfo, cityName, onBack }: BusRouteDetailProps) => {
+const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress }: BusRouteDetailProps) => {
   const busColor = getBusTypeColor(cityName, busInfo.type);
 
   // 정류장 렌더링
@@ -41,7 +42,7 @@ const BusRouteDetail = ({ busInfo, cityName, onBack }: BusRouteDetailProps) => {
     const isLast = index === ROUTE_STOPS.length - 1;
 
     return (
-      <View style={styles.nodeContainer}>
+      <TouchableOpacity style={styles.nodeContainer} onPress={() => onStopPress(item)} activeOpacity={0.6}>
         {/* 1. 왼쪽 타임라인 선과 노드 */}
         <View style={styles.timelineSection}>
           {/* 위쪽 선 (첫번째가 아니면 표시) */}
@@ -86,7 +87,7 @@ const BusRouteDetail = ({ busInfo, cityName, onBack }: BusRouteDetailProps) => {
             <Text style={styles.arsId}>{item.arsId}</Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -115,7 +116,7 @@ const BusRouteDetail = ({ busInfo, cityName, onBack }: BusRouteDetailProps) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: '#F5FBF6' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -167,16 +168,16 @@ const styles = StyleSheet.create({
   busInfoCard: {
     marginBottom: 8,
     padding: 8,
-    backgroundColor: '#F2F4F6',
+    backgroundColor: '#fff',
     borderRadius: 8,
     alignSelf: 'flex-start',
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#E0EAE2',
   },
   busCardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
   plateNo: { fontSize: 13, fontWeight: 'bold', color: '#333', marginRight: 6 },
-  lowFloorBadge: { backgroundColor: '#E8F3FF', paddingHorizontal: 4, paddingVertical: 1, borderRadius: 4 },
-  lowFloorText: { fontSize: 10, color: '#0064FF', fontWeight: 'bold' },
+  lowFloorBadge: { backgroundColor: '#E8F5E9', paddingHorizontal: 4, paddingVertical: 1, borderRadius: 4 }, // 연한 녹색 배경
+  lowFloorText: { fontSize: 10, color: '#2E7D32', fontWeight: 'bold' }, // 진한 녹색 텍스트
   crowdedText: { fontSize: 11, color: '#666' },
 });
 

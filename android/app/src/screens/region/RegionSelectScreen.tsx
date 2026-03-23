@@ -3,6 +3,7 @@ import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Animated, SafeAre
 import IsometricMap from '../../components/region/IsometricMap';
 import { CITIES }  from '../../constants/cities';
 import TypingHeader from '../../components/region/TypingHeader';
+import { storage } from '../../utils/storage';
 
 interface RegionSelectProps {
   onComplete: () => void;
@@ -15,10 +16,12 @@ const RegionSelectScreen = ({ onComplete }: RegionSelectProps ) => {
   const moveX = useRef(new Animated.Value(0)).current;
   const moveY = useRef(new Animated.Value(0)).current;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     const selectedCity = CITIES[selectedIdx];
-    Alert.alert("설정 완료", `${selectedCity.name} 지역으로 설정되었습니다!`);
-    onComplete(); // 선택 완료 후 호출
+    await storage.setCity(selectedCity.name);
+    Alert.alert("설정 완료", `${selectedCity.name} 지역으로 설정되었습니다!`, [
+      { text: "확인", onPress: onComplete }
+    ]);
   };
 
   useEffect(() => {

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
 import BusRouteDetail from './BusRouteDetail';
+import BusStopDetail from './BusStopDetail';
 import SearchBar from './SearchBar';
 import BusResultList from './BusResultList';
 
@@ -19,22 +20,54 @@ const MOCK_STOP_DATA = [
 
 interface Props {
   cityName: string;
+  initialData?: { type: 'bus' | 'stop', data: any } | null; // My탭에서 넘어온 데이터
 }
 
-const InBusContainer = ({ cityName }: Props) => {
+const InBusContainer = ({ cityName, initialData }: Props) => {
   const [searchMode, setSearchMode] = useState<'bus' | 'stop'>('bus');
   const [searchText, setSearchText] = useState('');
-  const [selectedBus, setSelectedBus] = useState<any>(null); // 선택된 버스 (상세화면용)
+  
+  // 화면 스택 관리 (버스 <-> 정류장 무한 이동 지원)
+  // stack items: { screen: 'bus' | 'stop', data: any }
+  const [navStack, setNavStack] = useState<any[]>([]);
+
+  // My탭에서 넘어온 데이터가 있으면 스택 초기화 후 이동
+  useEffect(() => {
+    if (initialData) {
+      setNavStack([{ screen: initialData.type, data: initialData.data }]);
+    }
+  }, [initialData]);
+
+  const pushScreen = (screen: 'bus' | 'stop', data: any) => {
+    setNavStack(prev => [...prev, { screen, data }]);
+  };
+
+  const popScreen = () => {
+    setNavStack(prev => prev.slice(0, -1));
+  };
 
   // 1. 상세 화면이 활성화된 경우
-  if (selectedBus) {
-    return (
-      <BusRouteDetail 
-        busInfo={selectedBus} 
-        cityName={cityName} 
-        onBack={() => setSelectedBus(null)} 
-      />
-    );
+  const currentScreen = navStack[navStack.length - 1];
+  if (currentScreen) {
+    if (currentScreen.screen === 'bus') {
+      return (
+        <BusRouteDetail 
+          busInfo={currentScreen.data} 
+          cityName={cityName} 
+          onBack={popScreen}
+          onStopPress={(stopInfo) => pushScreen('stop', stopInfo)}
+        />
+      );
+    } else if (currentScreen.screen === 'stop') {
+      return (
+        <BusStopDetail
+          stopInfo={currentScreen.data}
+          cityName={cityName}
+          onBack={popScreen}
+          onBusPress={(busInfo) => pushScreen('bus', busInfo)}
+        />
+      );
+    }
   }
 
   // 2. 검색 화면 (버스/정류장 통합)
@@ -45,9 +78,9 @@ const InBusContainer = ({ cityName }: Props) => {
 
   const handlePressItem = (item: any) => {
     if (searchMode === 'bus') {
-      setSelectedBus(item); // 버스 상세 화면으로 이동
+      pushScreen('bus', item);
     } else {
-      Alert.alert('정류장 선택', '정류장 상세 화면은 준비중입니다.');
+      pushScreen('stop', item);
     }
   };
 
@@ -89,11 +122,12 @@ const InBusContainer = ({ cityName }: Props) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F2F4F6' },
+  container: { flex: 1, backgroundColor: '#F5FBF6' },
   toggleContainer: {
     flexDirection: 'row',
-    padding: 15,
-    paddingBottom: 5,
+    paddingHorizontal: 15,
+    paddingTop: 25, // 상태바와의 간격을 위해 상단 여백 추가
+    paddingBottom: 15,
     backgroundColor: '#fff',
   },
   toggleBtn: {
@@ -101,10 +135,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: '#F2F4F6',
+    backgroundColor: '#EEF6F0',
   },
   toggleBtnActive: {
-    backgroundColor: '#333', // 활성화 시 어두운 배경
+    backgroundColor: '#ADEBB3', // 활성화 시 메인 민트색
   },
   toggleText: {
     color: '#888',
@@ -112,7 +146,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   toggleTextActive: {
-    color: '#fff',
+    color: '#191F28', // 민트 배경 위에서는 진한 회색 텍스트
     fontWeight: 'bold',
   },
 });

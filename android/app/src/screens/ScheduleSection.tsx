@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 
 // 더미 데이터: 버스 스케줄 및 사용자 탑승 기록
 const SCHEDULES = [
@@ -9,11 +9,7 @@ const SCHEDULES = [
   { id: '4', time: '07:50 (내일)', busNo: '수완03', stop: '수완지구', comment: null, status: 'upcoming' },
 ];
 
-interface Props {
-  onNavigate: (type: 'bus' | 'stop', data: any) => void;
-}
-
-const ScheduleSection = ({ onNavigate }: Props) => {
+const ScheduleSection = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.headerTitle}>나의 타임라인</Text>
@@ -23,12 +19,7 @@ const ScheduleSection = ({ onNavigate }: Props) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <TouchableOpacity 
-            style={styles.itemRow} 
-            activeOpacity={0.7}
-            // 예시로 버스 상세 화면으로 이동
-            onPress={() => onNavigate('bus', { name: item.busNo, type: '간선', direction: '상세정보' })}
-          >
+          <View style={styles.itemRow}>
             {/* 왼쪽 시간 영역 */}
             <View style={styles.timeContainer}>
               <Text style={styles.timeText}>{item.time.split(' ')[0]}</Text>
@@ -51,7 +42,7 @@ const ScheduleSection = ({ onNavigate }: Props) => {
                 )}
               </View>
             </View>
-          </TouchableOpacity>
+          </View>
         )}
       />
     </View>
@@ -78,7 +69,7 @@ const styles = StyleSheet.create({
   
   timelineLine: { width: 20, alignItems: 'center', position: 'relative', marginHorizontal: 10 },
   dot: { width: 10, height: 10, borderRadius: 5, marginTop: 6, borderWidth: 2, borderColor: '#fff' },
-  dotBlue: { backgroundColor: '#2E7D32' },
+  dotBlue: { backgroundColor: '#ADEBB3' }, // 메인 민트색
   dotGray: { backgroundColor: '#B0B8C1' },
   
   infoCard: { flex: 1, backgroundColor: '#fff', borderRadius: 16, padding: 15, elevation: 1 },

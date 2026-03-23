@@ -21,6 +21,10 @@ const SearchBar = ({ value, onChangeText, onSearch }: SearchBarProps) => {
           onSubmitEditing={onSearch}
           returnKeyType="search"
         />
+        {/* 검색 버튼 추가 */}
+        <TouchableOpacity onPress={onSearch} style={styles.searchButton} activeOpacity={0.7}>
+          <Text style={styles.searchButtonText}>검색</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -35,13 +39,26 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F2F4F6',
+    backgroundColor: '#EEF6F0', // 아주 연한 민트 그레이
     borderRadius: 12,
     paddingHorizontal: 15,
+    paddingRight: 8, // 버튼과의 간격을 위해 오른쪽 패딩 조정
     height: 50,
   },
   searchIcon: { fontSize: 18, marginRight: 10 },
   input: { flex: 1, fontSize: 16, color: '#333', height: '100%' },
+  searchButton: {
+    backgroundColor: '#ADEBB3', // 메인 테마 색상
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  searchButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#191F28',
+  },
 });
 
 export default SearchBar;

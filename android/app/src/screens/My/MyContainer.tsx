@@ -6,16 +6,20 @@ import { View, StyleSheet } from 'react-native';
 import FavoriteSection from './FavoriteSection'; 
 import ScheduleSection from './ScheduleSection';
 
-const MyContainer = () => {
+interface Props {
+  onNavigate: (type: 'bus' | 'stop', data: any) => void;
+}
+
+const MyContainer = ({ onNavigate }: Props) => {
   return (
     <View style={styles.container}>
       {/* 상단 50% */}
       <View style={styles.topSection}>
-        <FavoriteSection />
+        <FavoriteSection onNavigate={onNavigate} />
       </View>
       {/* 하단 50% */}
       <View style={styles.bottomSection}>
-        <ScheduleSection />
+        <ScheduleSection onNavigate={onNavigate} />
       </View>
     </View>
   );
