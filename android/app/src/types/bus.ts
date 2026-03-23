@@ -27,6 +27,14 @@ export interface IBusRouteInfo extends IBusRoute {
   intervaltime: number;
 }
 
-export interface IBusRoute {
-  
+
+export interface IBusLocation {
+    gpslati: number;
+    gpslong: number;
+    nodeid: string;
+    nodenm: string;
+    nodeord: number;
+    routenm: number;
+    routetp: string;
+    vehicleno: string;
 }

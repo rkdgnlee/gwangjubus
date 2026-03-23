@@ -16,6 +16,7 @@ const App = () => {
     const city = await storage.getCity();
     setSavedCity(city);
     setIsLoading(false); // 로딩 끝
+    
   };
 
   // 로딩 중일 때 (데이터 읽는 찰나의 순간)

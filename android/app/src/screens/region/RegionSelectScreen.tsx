@@ -17,7 +17,6 @@ const RegionSelectScreen = ({ onComplete }: RegionSelectProps ) => {
 
   const handleConfirm = () => {
     const selectedCity = CITIES[selectedIdx];
-    // 실제 사용 시 Alert.alert를 사용합니다.
     Alert.alert("설정 완료", `${selectedCity.name} 지역으로 설정되었습니다!`);
     onComplete(); // 선택 완료 후 호출
   };

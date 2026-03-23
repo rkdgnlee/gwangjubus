@@ -1,11 +1,10 @@
 import { IBusRoute } from "../../types/bus";
 
-const getBusRouteSearch = async (routeId: string): Promise<IBusRoute[]> => {
+export const getBusRouteNoList = async (cityCode: number, routeNo: string): Promise<IBusRoute[]> => {
   const apiKey = process.env.PUBLIC_API_PRIVATE_KEY;
   const apiUrl = process.env.API_BUS_ROUTE_URL;
 
-  // URL 파라미터 구성 (JSON 응답을 받기 위해 보통 _type=json 추가가 필요할 수 있음)
-  const response = await fetch(`${apiUrl}/getRouteAcctoThrghSttnList?serviceKey=${apiKey}&routeId=${routeId}&_type=json`);
+  const response = await fetch(`${apiUrl}/getRouteNoList?serviceKey=${apiKey}&pageNo=1&numOfRows=50&_type=json&cityCode=${cityCode}&routeNo=${routeNo}`);
 
   try {
     const data = await response.json();

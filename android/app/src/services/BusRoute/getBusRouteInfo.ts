@@ -1,6 +1,6 @@
 import { IBusRouteInfo } from "../../types/bus";
 
-const getBusRouteInfo = async (cityCode: number, routeId: string) : Promise<IBusRouteInfo[]> => {
+export const getBusRouteInfo = async (cityCode: number, routeId: string) : Promise<IBusRouteInfo[]> => {
   const apiKey = process.env.PUBLIC_API_PRIVATE_KEY;
   const apiUrl = process.env.API_BUS_ROUTE_URL;
 

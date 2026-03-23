@@ -1,12 +1,18 @@
 
 
-export interface IBusLocation {
+
+export interface IStop {
     gpslati: number;
     gpslong: number;
     nodeid: string;
     nodenm: string;
-    nodeord: number;
-    routenm: number;
+    nodeno: number;
+}
+
+export interface IStopThroghBusRoute {
+    endnodenm: string;
+    routeid: string;
+    routeno: string;
     routetp: string;
-    vehicleno: string;
+    startnodenm: string
 }

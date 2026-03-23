@@ -1,12 +1,11 @@
-import { IBusLocation } from "../../types/stop";
+import { IBusLocation } from "../../types/bus";
 
-const getSpecifyBusLocation = async (cityCode: number, routeId: string) : Promise<IBusLocation[]> => {
+export const getSpecifyBusLocation = async (cityCode: number, routeId: string, nodeId: string) : Promise<IBusLocation[]> => {
   const apiKey = process.env.PUBLIC_API_PRIVATE_KEY;
   const apiUrl = process.env.API_BUS_ROUTE_URL;
-
   try {
     const response = await fetch(
-      `${apiUrl}/getRouteInfolem?serviceKey=${apiKey}&_type=json&cityCode=${cityCode}&routeId=${routeId}`
+      `${apiUrl}/getRouteAcctoSpcifySttnAccesBusLcInfo?serviceKey=${apiKey}&pageNo=1&numOfRows=250&_type=json&routeId=${routeId}&nodeId=${nodeId}&cityCode=${cityCode}`
     );
     const data = await response.json();
     return data.response.body.items.item;
