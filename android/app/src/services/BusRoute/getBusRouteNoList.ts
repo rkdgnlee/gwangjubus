@@ -1,12 +1,11 @@
-import { IBusRoute } from "../../types/bus";
+import { PUBLIC_API_PRIVATE_KEY, API_BUS_ROUTE_URL } from '@env';
+import { IBusRoute } from '../../types/bus';
 
 export const getBusRouteNoList = async (cityCode: number, routeNo: string): Promise<IBusRoute[]> => {
-  const apiKey = process.env.PUBLIC_API_PRIVATE_KEY;
-  const apiUrl = process.env.API_BUS_ROUTE_URL;
-
-  const response = await fetch(`${apiUrl}/getRouteNoList?serviceKey=${apiKey}&pageNo=1&numOfRows=50&_type=json&cityCode=${cityCode}&routeNo=${routeNo}`);
-
+  const url = `${API_BUS_ROUTE_URL}/getRouteNoList?serviceKey=${PUBLIC_API_PRIVATE_KEY}&pageNo=1&numOfRows=20&_type=json&cityCode=${cityCode}&routeNo=${routeNo}`;
+  
   try {
+    const response = await fetch(url);
     const data = await response.json();
     return data.response.body.items.item;
   } catch (error) {

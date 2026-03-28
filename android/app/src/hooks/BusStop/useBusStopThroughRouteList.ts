@@ -16,7 +16,7 @@ export const useBusStopThroughRouteList = () => {
     setError(null);
 
     try {
-      const data = await getBusStopThroghRouteList(cityCode, routeId);
+      const data = await getBusStopThroghRouteList(cityCode, routeId, 36);
       
       if (data) {
         setRoutes(Array.isArray(data) ? data : [data]);

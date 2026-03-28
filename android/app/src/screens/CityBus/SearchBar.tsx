@@ -49,13 +49,13 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontSize: 16, color: '#333', height: '100%' },
   searchButton: {
     backgroundColor: '#ADEBB3', // 메인 테마 색상
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     marginLeft: 8,
   },
   searchButtonText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#191F28',
   },

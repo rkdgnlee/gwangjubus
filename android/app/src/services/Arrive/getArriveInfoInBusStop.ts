@@ -1,17 +1,16 @@
+import { PUBLIC_API_PRIVATE_KEY, API_STOP_ARRIVE_URL } from '@env';
 import { IArriveInBusStop } from "../../types/arrive";
 
-export const getArriveInfoInBusStop = async (cityCode: number, nodeId: string) : Promise<IArriveInBusStop[]>=> {
-  const apiKey = process.env.PUBLIC_API_PRIVATE_KEY;
-  const apiUrl = process.env.API_STOP_ARRIVE_URL;
-
+export const getArriveInfoInBusStop = async (cityCode: number, nodeId: string): Promise<IArriveInBusStop[]> => {
   try {
     const response = await fetch(
-      `${apiUrl}/getSttnAcctoArvlPrearngeInfoList?serviceKey=${apiKey}&pageNo=1&numOfRows=250&_type=json&cityCode=${cityCode}&nodeId=${nodeId}`
+      `${API_STOP_ARRIVE_URL}/getSttnAcctoArvlPrearngeInfoList?serviceKey=${PUBLIC_API_PRIVATE_KEY}&pageNo=1&numOfRows=50&_type=json&cityCode=${cityCode}&nodeId=${nodeId}`
     );
     const data = await response.json();
-    return data.response.body.items.item;
-    } catch (error) {
-    console.error('Error fetching bus route info:', error);
-    throw error; // 에러 발생 시 호출한 곳으로 전달
-    }
-}
+    const item = data.response.body.items.item;
+    return Array.isArray(item) ? item : [item];
+  } catch (error) {
+    console.error('Error fetching arrive info:', error);
+    throw error;
+  }
+};

@@ -1,17 +1,17 @@
-import { IBusLocation } from "../../types/bus";
+// getBusLocation.ts
+import { PUBLIC_API_PRIVATE_KEY, API_BUS_LOCATION_URL } from '@env';
+import { IBusLocation } from '../../types/bus';
 
-export const getBusLocation = async (cityCode: number, routeId: string) : Promise<IBusLocation[]> => {
-  const apiKey = process.env.PUBLIC_API_PRIVATE_KEY;
-  const apiUrl = process.env.API_BUS_ROUTE_URL;
-
+export const getBusLocation = async (cityCode: number, routeId: string): Promise<IBusLocation[]> => {
   try {
     const response = await fetch(
-      `${apiUrl}/getRouteAcctoBusLcList?serviceKey=${apiKey}&_type=json&cityCode=${cityCode}&routeId=${routeId}`
+      `${API_BUS_LOCATION_URL}/getRouteAcctoBusLcList?serviceKey=${PUBLIC_API_PRIVATE_KEY}&_type=json&cityCode=${cityCode}&routeId=${routeId}`
     );
     const data = await response.json();
-    return data.response.body.items.item;
-    } catch (error) {
-    console.error('Error fetching bus route info:', error);
-    throw error; // 에러 발생 시 호출한 곳으로 전달
-    }
-}
+    const item = data.response.body.items.item;
+    return Array.isArray(item) ? item : [item];
+  } catch (error) {
+    console.error('Error fetching bus location:', error);
+    throw error;
+  }
+};

@@ -1,56 +1,112 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import { getBusTypeColor } from '../../constants/busColors';
+import { IArriveWithDestination, useArriveInfoInBusStop } from '../../hooks/Arrive/useArriveInfoInBusStop';
+import { COLORS } from '../../constants/theme';
 
-// 더미 데이터: 정류장 도착 예정 버스 목록
-const ARRIVAL_LIST = [
-  { id: 'b1', name: '순환01', type: '급행', time: 2, remainStop: 1, crowded: '여유' },
-  { id: 'b2', name: '봉선27', type: '지선', time: 5, remainStop: 3, crowded: '보통' },
-  { id: 'b3', name: '일곡38', type: '지선', time: 12, remainStop: 8, crowded: '혼잡' },
-  { id: 'b4', name: '수완03', type: '급행', time: 18, remainStop: 12, crowded: '여유' },
-  { id: 'b5', name: '문흥39', type: '간선', time: 25, remainStop: 15, crowded: '보통' },
-];
+// arrtime(초) → "N분" or "N분 M0초"
+const formatArrTime = (seconds: number): string => {
+  if (seconds < 60) return '곧 도착';
+  const min = Math.floor(seconds / 60);
+  const sec = seconds % 60;
+  const roundedSec = Math.floor(sec / 10) * 10;
+  if (roundedSec === 0) return `${min}분`;
+  return `${min}분 ${roundedSec}초`;
+};
+
+const CITY_CODE_MAP: Record<string, number> = {
+  '광주': 24, '서울': 11, '부산': 26, '대구': 22,
+  '인천': 23, '대전': 25, '울산': 21, '세종': 12, '경기': 31,
+};
 
 interface BusStopDetailProps {
-  stopInfo: any; // 정류장 정보 객체
+  stopInfo: any;
   cityName: string;
   onBack: () => void;
   onBusPress: (busInfo: any) => void;
 }
 
 const BusStopDetail = ({ stopInfo, cityName, onBack, onBusPress }: BusStopDetailProps) => {
-  // 도착 시간이 적은 순으로 정렬
-  const sortedArrivals = [...ARRIVAL_LIST].sort((a, b) => a.time - b.time);
+  const cityCode = CITY_CODE_MAP[cityName] || 24;
+  const { locations, loading, error, search, reset } = useArriveInfoInBusStop();
+  const [refreshing, setRefreshing] = useState(false);
 
-  const handleMorePress = () => {
-    Alert.alert("설정", `${stopInfo.name} 정류장`, [
-      { text: "즐겨찾기 추가", onPress: () => Alert.alert("완료", "즐겨찾기에 추가되었습니다.") },
-      { text: "정류장 위치 보기", onPress: () => console.log("지도 보기") },
-      { text: "취소", style: "cancel" }
-    ]);
-  };
+  // 도착 시간(arrtime) 기준 오름차순 정렬
+  const sortedLocations = useMemo(() => {
+    return [...locations].sort((a, b) => {
+      const timeA = a.arrtime ?? 999999; // 정보 없으면 뒤로 보냄
+      const timeB = b.arrtime ?? 999999;
+      return timeA - timeB;
+    });
+  }, [locations]);
 
-  const renderBusItem = ({ item }: { item: any }) => {
-    const color = getBusTypeColor(cityName, item.type);
+  const fetchData = useCallback(() => {
+    search(cityCode, stopInfo.nodeid);
+  }, [cityCode, stopInfo.nodeid]);
+
+  useEffect(() => {
+    fetchData();
+    return () => reset();
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await search(cityCode, stopInfo.nodeid);
+    setRefreshing(false);
+  }, [cityCode, stopInfo.nodeid]);
+
+  const renderBusItem = ({ item }: { item: IArriveWithDestination }) => {
+    const color = getBusTypeColor(cityName, item.routetp);
+    
+    // 도착 정보 존재 여부 확인
+    const hasArrival = item.arrtime !== undefined && item.arrtime !== null;
+    const arrprevstationcnt = item.arrprevstationcnt ?? 0;
+
+    // 강조 단계 설정
+    const isCritical = hasArrival && arrprevstationcnt <= 2; // 2정거장 이하 (완전 주목)
+    const isWarning = hasArrival && item.arrtime! <= 300; // 5분 이내 (약간 주목)
+
     return (
-      <TouchableOpacity 
-        style={styles.busItem} 
+      <TouchableOpacity
+        style={styles.busItem}
         activeOpacity={0.7}
         onPress={() => onBusPress(item)}
       >
         <View style={styles.busInfoLeft}>
-          <Text style={[styles.busName, { color: color }]}>{item.name}</Text>
-          <Text style={styles.busDirection}>{item.type} • {stopInfo.direction || '종점'} 방면</Text>
+          <Text style={[styles.busName, { color }]}>{item.routeno}</Text>
+          <Text style={styles.busDirection}>{item.endnodenm} 종점</Text>
         </View>
         <View style={styles.busInfoRight}>
-          <Text style={styles.remainTime}>{item.time}분</Text>
-          <Text style={styles.remainStop}>{item.remainStop}번째 전</Text>
-          <Text style={[
-            styles.crowded, 
-            item.crowded === '혼잡' ? styles.crowdedRed : item.crowded === '여유' ? styles.crowdedGreen : styles.crowdedGray
-          ]}>
-            {item.crowded}
-          </Text>
+          {hasArrival ? (
+            <>
+              <View 
+                style={[
+                  styles.timeBadge, 
+                  isCritical 
+                    ? styles.criticalBadge 
+                    : isWarning 
+                      ? styles.warningBadge 
+                      : styles.normalBadge
+                ]}
+              >
+                <Text 
+                  style={[
+                    styles.remainTime, 
+                    isCritical 
+                      ? styles.criticalText 
+                      : isWarning 
+                        ? styles.warningText 
+                        : styles.normalText
+                  ]}
+                >
+                  {formatArrTime(item.arrtime!)}
+                </Text>
+              </View>
+              <Text style={styles.remainStop}>{arrprevstationcnt}정거장 전</Text>
+            </>
+          ) : (
+            <Text style={styles.noArrivalText}>도착 정보 없음</Text>
+          )}
         </View>
       </TouchableOpacity>
     );
@@ -64,26 +120,45 @@ const BusStopDetail = ({ stopInfo, cityName, onBack, onBusPress }: BusStopDetail
           <Text style={styles.backText}>←</Text>
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.stopName}>{stopInfo.name}</Text>
-          <Text style={styles.arsId}>{stopInfo.id || '0000'} | {stopInfo.direction || '방면 정보 없음'}</Text>
+          <Text style={styles.stopName}>{stopInfo.nodenm}</Text>
+          <Text style={styles.arsId}>정류소 번호 {stopInfo.nodeno}</Text>
         </View>
-        <TouchableOpacity onPress={handleMorePress} style={styles.moreButton}>
-          <Text style={styles.moreText}>•••</Text>
-        </TouchableOpacity>
       </View>
 
-      {/* 도착 정보 리스트 */}
       <View style={styles.listHeader}>
         <Text style={styles.listTitle}>도착 예정 버스</Text>
+        <Text style={styles.listCount}>총 {sortedLocations.length}대</Text>
       </View>
-      
-      <FlatList
-        data={sortedArrivals}
-        keyExtractor={(item) => item.id}
-        renderItem={renderBusItem}
-        contentContainerStyle={styles.listContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
+
+      {loading && !refreshing ? (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#ADEBB3" />
+          <Text style={{ marginTop: 10, color: '#888' }}>도착 정보를 불러오고 있어요...</Text>
+        </View>
+      ) : error ? (
+        <View style={styles.centerContainer}>
+          <Text style={{ color: '#aaa' }}>{error}</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={sortedLocations}
+          keyExtractor={(item) => item.routeid}
+          renderItem={renderBusItem}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#ADEBB3"
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.centerContainer}>
+              <Text style={styles.emptyText}>도착 예정 버스가 없습니다.</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 };
@@ -103,33 +178,45 @@ const styles = StyleSheet.create({
   headerContent: { flex: 1 },
   stopName: { fontSize: 20, fontWeight: 'bold', color: '#191F28' },
   arsId: { fontSize: 13, color: '#8B95A1', marginTop: 2 },
-  moreButton: { padding: 5 },
-  moreText: { fontSize: 20, color: '#333', fontWeight: 'bold', letterSpacing: 2 },
-
-  listHeader: { padding: 15, paddingBottom: 5 },
-  listTitle: { fontSize: 16, fontWeight: 'bold', color: '#666' },
-  listContent: { paddingHorizontal: 15, paddingBottom: 20 },
-  
+  listHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15 },
+  listTitle: { fontSize: 18, fontWeight: 'bold', color: '#191F28' },
+  listCount: { fontSize: 14, color: '#8B95A1' },
+  listContent: { paddingHorizontal: 20, paddingBottom: 30 },
   busItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 18,
+    padding: 20,
     backgroundColor: '#fff',
+    borderRadius: 16,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
   },
-  separator: { height: 1, backgroundColor: '#f0f0f0' },
-  
   busInfoLeft: { justifyContent: 'center' },
-  busName: { fontSize: 22, fontWeight: 'bold', marginBottom: 4 },
-  busDirection: { fontSize: 13, color: '#888' },
-  
+  busName: { fontSize: 24, fontWeight: 'bold', marginBottom: 2 },
+  busDirection: { fontSize: 14, color: '#8B95A1', fontWeight: '500' },
   busInfoRight: { alignItems: 'flex-end' },
-  remainTime: { fontSize: 20, fontWeight: 'bold', color: '#D13535' }, // 강조색(빨강)
-  remainStop: { fontSize: 13, color: '#666', marginBottom: 4 },
-  crowded: { fontSize: 12, fontWeight: '600' },
-  crowdedRed: { color: '#FF3B30' },
-  crowdedGreen: { color: '#2E7D32' },
-  crowdedGray: { color: '#8B95A1' },
+  timeBadge: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, marginBottom: 6 },
+  
+  // 상태별 배지 스타일
+  normalBadge: { backgroundColor: '#F2F4F6' },
+  warningBadge: { backgroundColor: '#E7F9ED' }, // 1단계: 연한 민트
+  criticalBadge: { backgroundColor: '#31D698' }, // 2단계: 선명한 민트 (Toss Green)
+  
+  remainTime: { fontSize: 16, fontWeight: 'bold' },
+  
+  normalText: { color: '#4E5968' },
+  warningText: { color: '#2E7D32' },
+  criticalText: { color: '#FFFFFF' },
+
+  remainStop: { fontSize: 13, color: '#8B95A1', fontWeight: '500' },
+  noArrivalText: { fontSize: 14, color: '#D1D6DB', fontWeight: '500' }, // 연한 회색
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 50 },
+  emptyText: { color: '#aaa', fontSize: 16 },
 });
 
 export default BusStopDetail;

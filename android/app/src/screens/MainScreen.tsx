@@ -84,6 +84,7 @@ const MainScreen = ({ cityName, onReset }: MainProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('My');
   const [favorites, setFavorites] = useState<FavoriteBus[]>([]);
   const [cityBusInitData, setCityBusInitData] = useState<{ type: 'bus' | 'stop', data: any } | null>(null);
+  const [cityBusKey, setCityBusKey] = useState(0); // 시내버스 탭 초기화를 위한 카운터
 
   useEffect(() => {
     loadFavorites();
@@ -110,8 +111,8 @@ const MainScreen = ({ cityName, onReset }: MainProps) => {
       case 'CityBus':
         return (
           <CityBusContainer 
+            key={`city-bus-${cityBusKey}`} // 키가 바뀌면 화면이 초기화됨
             cityName={cityName} 
-            initialData={cityBusInitData} 
           />
         );
       case 'ExpressBus':
@@ -149,8 +150,14 @@ const MainScreen = ({ cityName, onReset }: MainProps) => {
                 tab={tab}
                 isActive={activeTab === tab}
                 onPress={() => {
-                  setActiveTab(tab);
-                  if (tab !== 'CityBus') setCityBusInitData(null); // 다른 탭 가면 초기화
+                  if (activeTab === tab && tab === 'CityBus') {
+                    // 이미 시내버스 탭인데 또 누른 경우 -> 초기화 실행
+                    setCityBusKey(prev => prev + 1);
+                    setCityBusInitData(null);
+                  } else {
+                    setActiveTab(tab);
+                    if (tab !== 'CityBus') setCityBusInitData(null);
+                  }
                 }}
               />
             ))}

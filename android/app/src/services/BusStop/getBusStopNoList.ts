@@ -1,26 +1,17 @@
+import { PUBLIC_API_PRIVATE_KEY, API_STOP_URL } from '@env';
 import { IStop } from "../../types/stop";
 
-export const getBusStopNoList = async (cityCode: number, nodeNm: string, nodeNo?: string) : Promise<IStop[]> => {
-  const apiKey = process.env.PUBLIC_API_PRIVATE_KEY;
-  const apiUrl = process.env.API_STOP_URL;
-
-  const params = new URLSearchParams({
-    serviceKey: apiKey!,
-    _type: 'json',
-    cityCode: String(cityCode),
-    nodeNm,
-    ...(nodeNo && { nodeNo }),
-  });
-
-
+export const getBusStopNoList = async (cityCode: number, nodeNm: string, nodeNo?: string): Promise<IStop[]> => {
   try {
+    // URLSearchParams 쓰지 말고 직접 넣기
     const response = await fetch(
-      `${apiUrl}/getSttnNoList?serviceKey=${apiKey}&_type=json&cityCode=${cityCode}&nodeNm=${nodeNm}&nodeNo=${nodeNo}`
+      `${API_STOP_URL}/getSttnNoList?serviceKey=${PUBLIC_API_PRIVATE_KEY}&pageNo=1&numOfRows=6&_type=json&cityCode=${cityCode}&nodeNm=${encodeURIComponent(nodeNm)}${nodeNo ? `&nodeNo=${nodeNo}` : ''}`
     );
     const data = await response.json();
-    return data.response.body.items.item;
-    } catch (error) {
-    console.error('Error fetching bus route info:', error);
-    throw error; // 에러 발생 시 호출한 곳으로 전달
-    }
-}
+    const item = data.response.body.items.item;
+    return Array.isArray(item) ? item : [item];
+  } catch (error) {
+    console.error('Error fetching bus stop info:', error);
+    throw error;
+  }
+};

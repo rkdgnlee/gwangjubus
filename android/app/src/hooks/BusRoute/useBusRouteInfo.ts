@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { IStopThroghBusRoute } from '../../types/stop';
-import { getBusStopThroghRouteList } from '../../services/BusStop/getBusStopThroghRouteList';
 import { getBusRouteInfo } from '../../services/BusRoute/getBusRouteInfo';
 import { IBusRouteInfo } from '../../types/bus';
 

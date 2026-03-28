@@ -1,70 +1,131 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, FlatList } from 'react-native';
 import BusRouteDetail from './BusRouteDetail';
+import BusStopDetail from './BusStopDetail';
 import SearchBar from './SearchBar';
 import BusResultList from './BusResultList';
+import { useBusRouteNoList } from '../../hooks/BusRoute/useBusRouteNoList';
+import { useBusStopNoList } from '../../hooks/BusStop/useBusStopNoList';
+import { useSearchHistory } from '../../hooks/search/useSearchHistory';
 
-// 더미 데이터 (버스)
-const MOCK_BUS_DATA = [
-  { id: '1', name: '순환01', type: '급행', direction: '세하동' },
-  { id: '2', name: '수완03', type: '급행', direction: '송원대' },
-  { id: '3', name: '봉선27', type: '지선', direction: '용산지구' },
-];
-
-// 더미 데이터 (정류장 - 예시)
-const MOCK_STOP_DATA = [
-  { id: 's1', name: '광주역', type: '일반', direction: '북구청' }, 
-  // 정류장도 BusResultList 구조를 임시로 사용하여 표시 (type만 다르게)
-];
+const CITY_CODE_MAP: Record<string, number> = {
+  '광주': 24, '서울': 11, '부산': 26, '대구': 22,
+  '인천': 23, '대전': 25, '울산': 21, '세종': 12, '경기': 31,
+};
 
 interface Props {
   cityName: string;
+  initialData?: { type: 'bus' | 'stop', data: any } | null;
 }
 
-const InBusContainer = ({ cityName }: Props) => {
+const CityBusContainer = ({ cityName, initialData }: Props) => {
   const [searchMode, setSearchMode] = useState<'bus' | 'stop'>('bus');
   const [searchText, setSearchText] = useState('');
-  const [selectedBus, setSelectedBus] = useState<any>(null); // 선택된 버스 (상세화면용)
+  const [hasSearched, setHasSearched] = useState(false);
+  const [navStack, setNavStack] = useState<any[]>([]);
 
-  // 1. 상세 화면이 활성화된 경우
-  if (selectedBus) {
-    return (
-      <BusRouteDetail 
-        busInfo={selectedBus} 
-        cityName={cityName} 
-        onBack={() => setSelectedBus(null)} 
-      />
-    );
+  const cityCode = CITY_CODE_MAP[cityName] || 24;
+
+  const { routes, loading: busLoading, search: searchBus, reset: resetBus } = useBusRouteNoList();
+  const { stops, loading: stopLoading, search: searchStop, reset: resetStop } = useBusStopNoList();
+
+  const {
+    history: busHistory,
+    addHistory: addBusHistory,
+    clearHistory: clearBusHistory,
+    removeHistory: removeBusHistory,
+  } = useSearchHistory('bus');
+
+  const {
+    history: stopHistory,
+    addHistory: addStopHistory,
+    clearHistory: clearStopHistory,
+    removeHistory: removeStopHistory,
+  } = useSearchHistory('stop');
+
+  // 현재 모드에 맞는 것만 사용
+  const history = searchMode === 'bus' ? busHistory : stopHistory;
+  const addHistory = searchMode === 'bus' ? addBusHistory : addStopHistory;
+  const clearHistory = searchMode === 'bus' ? clearBusHistory : clearStopHistory;
+  const removeHistory = searchMode === 'bus' ? removeBusHistory : removeStopHistory;
+
+  useEffect(() => {
+    if (initialData) {
+      setNavStack([{ screen: initialData.type, data: initialData.data }]);
+    }
+  }, [initialData]);
+
+  // 모드 전환 시 초기화
+  const handleModeChange = (mode: 'bus' | 'stop') => {
+    setSearchMode(mode);
+    setSearchText('');
+    setHasSearched(false);
+    resetBus();
+    resetStop();
+  };
+
+  const pushScreen = (screen: 'bus' | 'stop', data: any) => {
+    setNavStack(prev => [...prev, { screen, data }]);
+  };
+
+  const popScreen = () => {
+    setNavStack(prev => prev.slice(0, -1));
+  };
+
+  const handleSearch = useCallback(async (text?: string) => {
+    const query = text ?? searchText;
+    if (!query.trim()) return;
+    setHasSearched(true);
+    await addHistory(query);
+    if (searchMode === 'bus') {
+      searchBus(cityCode, query);
+    } else {
+      searchStop(cityCode, query);
+    }
+  }, [searchText, searchMode, cityCode]);
+
+  // 상세 화면
+  const currentScreen = navStack[navStack.length - 1];
+  if (currentScreen) {
+    if (currentScreen.screen === 'bus') {
+      return (
+        <BusRouteDetail
+          busInfo={currentScreen.data}
+          cityName={cityName}
+          onBack={popScreen}
+          onStopPress={(stop) => pushScreen('stop', stop)}
+        />
+      );
+    } else {
+      return (
+        <BusStopDetail
+          stopInfo={currentScreen.data}
+          cityName={cityName}
+          onBack={popScreen}
+          onBusPress={(bus) => pushScreen('bus', bus)}
+        />
+      );
+    }
   }
 
-  // 2. 검색 화면 (버스/정류장 통합)
-  const currentData = searchMode === 'bus' ? MOCK_BUS_DATA : MOCK_STOP_DATA;
-  const filteredData = searchText.length > 0 
-    ? currentData // 실제로는 여기서 filter 로직 수행
-    : [];
-
-  const handlePressItem = (item: any) => {
-    if (searchMode === 'bus') {
-      setSelectedBus(item); // 버스 상세 화면으로 이동
-    } else {
-      Alert.alert('정류장 선택', '정류장 상세 화면은 준비중입니다.');
-    }
-  };
+  const isLoading = busLoading || stopLoading;
 
   return (
     <View style={styles.container}>
-      {/* 상단 모드 전환 토글 */}
+      <Text style={styles.headerTitle}>통합 검색</Text>
+
+      {/* 모드 토글 */}
       <View style={styles.toggleContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.toggleBtn, searchMode === 'bus' && styles.toggleBtnActive]}
-          onPress={() => setSearchMode('bus')}
+          onPress={() => handleModeChange('bus')}
           activeOpacity={0.8}
         >
           <Text style={[styles.toggleText, searchMode === 'bus' && styles.toggleTextActive]}>버스 검색</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.toggleBtn, searchMode === 'stop' && styles.toggleBtnActive]}
-          onPress={() => setSearchMode('stop')}
+          onPress={() => handleModeChange('stop')}
           activeOpacity={0.8}
         >
           <Text style={[styles.toggleText, searchMode === 'stop' && styles.toggleTextActive]}>정류장 검색</Text>
@@ -72,50 +133,114 @@ const InBusContainer = ({ cityName }: Props) => {
       </View>
 
       {/* 검색창 */}
-      <SearchBar 
+      <SearchBar
         value={searchText}
         onChangeText={setSearchText}
-        onSearch={() => console.log('Search:', searchText)}
+        onSearch={() => handleSearch()}
       />
 
-      {/* 결과 리스트 */}
-      <BusResultList 
-        data={filteredData}
-        cityName={cityName}
-        onPressItem={handlePressItem}
-      />
+      {/* 결과 or 검색기록 */}
+      <View style={{ flex: 1 }}>
+        {isLoading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color="#ADEBB3" />
+            <Text style={{ marginTop: 10, color: '#888' }}>정보를 불러오고 있어요...</Text>
+          </View>
+        ) : hasSearched ? (
+          <BusResultList
+            data={searchMode === 'bus' ? routes : stops}
+            mode={searchMode}
+            cityName={cityName}
+            onPressItem={(item) => pushScreen(searchMode, item)}
+          />
+        ) : (
+          // 검색 전 - 검색기록 표시
+          <View style={styles.historyContainer}>
+            <View style={styles.historyHeader}>
+              <Text style={styles.historyTitle}>최근 검색</Text>
+              {history.length > 0 && (
+                <TouchableOpacity onPress={clearHistory}>
+                  <Text style={styles.clearHistoryText}>전체 삭제</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {history.length === 0 ? (
+              <Text style={styles.emptyHistory}>최근 검색 기록이 없습니다.</Text>
+            ) : (
+              <FlatList
+                data={history}
+                keyExtractor={(item) => item.query + item.timestamp}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.historyItem}
+                    onPress={() => {
+                      setSearchText(item.query);
+                      handleSearch(item.query);
+                    }}
+                  >
+                    <Text style={styles.historyItemText}>🕐 {item.query}</Text>
+                    <TouchableOpacity onPress={() => removeHistory(item.query)}>
+                      <Text style={styles.historyDeleteBtn}>✕</Text>
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+          </View>
+        )}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5FBF6' },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#191F28',
+    marginBottom: 15,
+    marginTop: 24,
+    marginLeft: 20,
+  },
   toggleContainer: {
     flexDirection: 'row',
     paddingHorizontal: 15,
-    paddingVertical: 60, // 상태바와의 간격을 위해 상단 여백 추가
+    paddingTop: 25,
     paddingBottom: 15,
     backgroundColor: '#fff',
   },
   toggleBtn: {
     marginRight: 10,
-    paddingVertical: 8,
+    paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 20,
     backgroundColor: '#EEF6F0',
   },
-  toggleBtnActive: {
-    backgroundColor: '#ADEBB3', // 활성화 시 메인 민트색
+  toggleBtnActive: { backgroundColor: '#ADEBB3' },
+  toggleText: { color: '#888', fontWeight: '600', fontSize: 14 },
+  toggleTextActive: { color: '#191F28', fontWeight: 'bold' },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  historyContainer: { flex: 1, paddingHorizontal: 20, paddingTop: 10 },
+  historyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
   },
-  toggleText: {
-    color: '#888',
-    fontWeight: '600',
-    fontSize: 14,
+  historyTitle: { fontSize: 16, fontWeight: 'bold', color: '#4E5968' },
+  clearHistoryText: { fontSize: 13, color: '#B0B8C1' },
+  historyItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F4F6',
   },
-  toggleTextActive: {
-    color: '#191F28', // 민트 배경 위에서는 진한 회색 텍스트
-    fontWeight: 'bold',
-  },
+  historyItemText: { fontSize: 16, color: '#333D4B' },
+  historyDeleteBtn: { fontSize: 14, color: '#B0B8C1', paddingHorizontal: 8 },
+  emptyHistory: { color: '#aaa', fontSize: 14, textAlign: 'center', marginTop: 30 },
 });
 
-export default InBusContainer;
+export default CityBusContainer;

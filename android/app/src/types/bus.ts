@@ -9,7 +9,7 @@ export interface IBusViaRoute {
   nodenm: string;
   nodeno: number;
   routeid: string;
-  updowncd: number;
+  nodeord: number;
 }
 export interface IBusRoute {
   endnodenm: string;

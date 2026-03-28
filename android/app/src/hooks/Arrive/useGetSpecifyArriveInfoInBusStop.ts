@@ -10,7 +10,7 @@ export const useGetSpecifyArriveInfoInBusStop = () => {
   const [error, setError] = useState<string | null>(null);
 
   // 검색 실행 함수 (useCallback으로 메모이제이션)
-  const search = useCallback(async (cityCode: number, nodeId: string,routeId: string) => {
+  const search = useCallback(async (cityCode: number, nodeId: string, routeId: string) => {
     if (!routeId.trim()) return; // 빈 검색어 방지
 
     setLoading(true);
