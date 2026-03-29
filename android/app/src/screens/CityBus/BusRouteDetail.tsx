@@ -1,16 +1,22 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, RefreshControl
+  ActivityIndicator, RefreshControl, Modal, TextInput,
+  KeyboardAvoidingView, Platform, Pressable
 } from 'react-native';
 import { getBusTypeColor } from '../../constants/busColors';
 import { useBusRouteDetail } from '../../hooks/BusRoute/useBusRouteDetail';
+import { useFavorites } from '../../hooks/favorites/useFavorites';
 import { IBusViaRoute, IBusLocation } from '../../types/bus';
+import SaveModal from '../../components/SaveModal';
+import MenuBottomSheet from '../../components/MenuBottomSheet';
 
 const CITY_CODE_MAP: Record<string, number> = {
   '광주': 24, '서울': 11, '부산': 26, '대구': 22,
   '인천': 23, '대전': 25, '울산': 21, '세종': 12, '경기': 31,
 };
+
+const DEFAULT_EMOJI = '🔖';
 
 interface BusRouteDetailProps {
   busInfo: any;
@@ -23,9 +29,16 @@ const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress }: BusRouteDeta
   const cityCode = CITY_CODE_MAP[cityName] || 24;
   const busColor = getBusTypeColor(cityName, busInfo.routetp);
   const { info, stops, locations, loading, error, fetch, refreshLocations } = useBusRouteDetail();
+  const { addBus, removeFavorite, isBusSaved, getFavoriteId, load } = useFavorites();
+
   const [refreshing, setRefreshing] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [saveModalVisible, setSaveModalVisible] = useState(false);
+
+  const saved = isBusSaved(busInfo.routeid);
 
   useEffect(() => {
+    load();
     fetch(cityCode, busInfo.routeid);
   }, [busInfo.routeid]);
 
@@ -35,28 +48,40 @@ const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress }: BusRouteDeta
     setRefreshing(false);
   }, [cityCode, busInfo.routeid]);
 
- 
-  // 정류장 nodeid 기준으로 버스 위치 매핑
+  const handleSave = async (emoji: string, memo: string) => {
+    await addBus({
+      type: 'bus',
+      routeid: busInfo.routeid,
+      routeno: busInfo.routeno,
+      routetp: busInfo.routetp,
+      startnodenm: busInfo.startnodenm,
+      endnodenm: busInfo.endnodenm,
+      cityName,
+      emoji: emoji,
+      memo: memo,
+    });
+    setSaveModalVisible(false);
+    setMenuVisible(false);
+  };
+
+  const handleUnsave = async () => {
+    await removeFavorite(getFavoriteId('bus', busInfo.routeid));
+    setMenuVisible(false);
+  };
+
+  const handleOpenSaveModal = () => {
+    setMenuVisible(false);
+    setSaveModalVisible(true);
+  };
+
   const locationMap: Record<string, IBusLocation[]> = {};
   locations.forEach(loc => {
     if (!locationMap[loc.nodeid]) locationMap[loc.nodeid] = [];
     locationMap[loc.nodeid].push(loc);
   });
 
-
   const sortedStops = [...stops].sort((a, b) => a.nodeord - b.nodeord);
-
   const listData: any[] = sortedStops.map(s => ({ ...s, __type: 'stop' }));
-
-  const renderDivider = () => (
-    <View style={styles.dividerContainer}>
-      <View style={styles.dividerLine} />
-      <View style={styles.dividerBadge}>
-        <Text style={styles.dividerText}>↑ 상행 종료  |  하행 시작 ↓</Text>
-      </View>
-      <View style={styles.dividerLine} />
-    </View>
-  );
 
   const renderStop = (item: IBusViaRoute, index: number, sectionStops: IBusViaRoute[]) => {
     const busesHere = locationMap[item.nodeid] || [];
@@ -65,7 +90,6 @@ const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress }: BusRouteDeta
 
     return (
       <View style={styles.itemContainer}>
-        {/* 버스 위치 카드들 */}
         {busesHere.map((bus) => (
           <View key={bus.vehicleno} style={styles.busRow}>
             <View style={styles.timelineSection}>
@@ -83,7 +107,6 @@ const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress }: BusRouteDeta
           </View>
         ))}
 
-        {/* 정류장 행 */}
         <TouchableOpacity
           style={styles.stationRow}
           onPress={() => onStopPress(item)}
@@ -109,7 +132,6 @@ const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress }: BusRouteDeta
   };
 
   const renderItem = ({ item, index }: { item: any; index: number }) => {
-    if (item.__type === 'divider') return renderDivider(); // 이제 안 쓰이지만 유지해도 무방
     return renderStop(item, index, sortedStops);
   };
 
@@ -153,6 +175,10 @@ const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress }: BusRouteDeta
             </Text>
           )}
         </View>
+        {/* 메뉴 버튼 */}
+        <TouchableOpacity style={styles.menuButton} onPress={() => setMenuVisible(true)}>
+          <Text style={styles.menuText}>•••</Text>
+        </TouchableOpacity>
       </View>
 
       {/* 노선 리스트 */}
@@ -162,12 +188,26 @@ const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress }: BusRouteDeta
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#ADEBB3"
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#ADEBB3" />
         }
+      />
+
+      {/* 공통 메뉴 바텀시트 적용 */}
+      <MenuBottomSheet
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        onSavePress={handleOpenSaveModal}
+        onUnsavePress={handleUnsave}
+        isSaved={saved}
+      />
+
+      {/* 저장 Modal - SaveModal로 교체 */}
+      <SaveModal
+        visible={saveModalVisible}
+        title={busInfo.routeno}
+        subtitle={`노선 정보 | 🚩${busInfo.startnodenm} → 🏁${busInfo.endnodenm}`}
+        onClose={() => setSaveModalVisible(false)}
+        onSave={handleSave}
       />
     </View>
   );
@@ -186,24 +226,14 @@ const styles = StyleSheet.create({
   },
   backButton: { marginRight: 15, padding: 5 },
   backText: { fontSize: 24, color: '#333' },
+  headerBusTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
   headerBusName: { fontSize: 24, fontWeight: 'bold' },
-  headerBusTitleRow: { 
-    flexDirection: 'row', 
-    alignItems: 'center',
-    marginBottom: 2 
-  },
-  routeTypeBadge: {
-    marginLeft: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  routeTypeSmall: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
+  routeTypeBadge: { marginLeft: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  routeTypeSmall: { fontSize: 14, fontWeight: '700' },
   headerDirection: { fontSize: 15, color: '#555', marginTop: 2 },
   headerInterval: { fontSize: 13, color: '#ADEBB3', marginTop: 4, fontWeight: '600' },
+  menuButton: { padding: 8, marginLeft: 8 },
+  menuText: { fontSize: 20, color: '#333', fontWeight: 'bold', letterSpacing: 2 },
 
   listContent: { paddingVertical: 20, paddingHorizontal: 20 },
   itemContainer: { flexDirection: 'column' },
@@ -252,22 +282,49 @@ const styles = StyleSheet.create({
   nodeNo: { fontSize: 13, color: '#aaa', marginTop: 2 },
   chevron: { fontSize: 24, color: '#B0B8C1' },
 
-  // 구분선
   dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 16,
-    paddingHorizontal: 4,
+    flexDirection: 'row', alignItems: 'center',
+    marginVertical: 16, paddingHorizontal: 4,
   },
   dividerLine: { flex: 1, height: 1, backgroundColor: '#ADEBB3' },
   dividerBadge: {
-    backgroundColor: '#ADEBB3',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginHorizontal: 8,
+    backgroundColor: '#ADEBB3', paddingHorizontal: 12,
+    paddingVertical: 6, borderRadius: 20, marginHorizontal: 8,
   },
   dividerText: { fontSize: 13, color: '#191F28', fontWeight: 'bold' },
+
+  overlay: { flex: 1, justifyContent: 'flex-end' },
+  overlayBg: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },
+
+  menuSheet: {
+    backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    padding: 20, paddingBottom: 40,
+  },
+  menuItem: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+  menuItemText: { fontSize: 17, color: '#191F28', fontWeight: '500' },
+
+  saveSheet: {
+    backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: 24, paddingBottom: 40,
+  },
+  saveSheetTitle: { fontSize: 20, fontWeight: 'bold', color: '#191F28', marginBottom: 16 },
+  infoBox: { backgroundColor: '#F5FBF6', borderRadius: 12, padding: 14, marginBottom: 20 },
+  infoTitle: { fontSize: 17, fontWeight: 'bold', color: '#191F28' },
+  infoSub: { fontSize: 13, color: '#8B95A1', marginTop: 4 },
+  inputLabel: { fontSize: 14, fontWeight: '600', color: '#4E5968', marginBottom: 8 },
+  emojiRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#F5FBF6', borderRadius: 12,
+    padding: 14, marginBottom: 20,
+  },
+  emojiInput: { fontSize: 32, marginRight: 12, minWidth: 44 },
+  emojiHint: { fontSize: 14, color: '#8B95A1' },
+  memoInput: {
+    backgroundColor: '#F5FBF6', borderRadius: 12,
+    padding: 14, fontSize: 16, color: '#191F28', marginBottom: 24,
+  },
+  saveButton: { backgroundColor: '#ADEBB3', borderRadius: 14, padding: 16, alignItems: 'center' },
+  saveButtonText: { fontSize: 17, fontWeight: 'bold', color: '#191F28' },
 });
 
 export default BusRouteDetail;

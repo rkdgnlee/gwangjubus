@@ -5,11 +5,13 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
+    "ios17": "react-native run-ios -- --simulator='iPhone 17'",
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest"
   },
   "dependencies": {
+    "@notifee/react-native": "^9.1.8",
     "@react-native-async-storage/async-storage": "^1.23.1",
     "@react-native/new-app-screen": "0.84.1",
     "lucide-react-native": "^0.577.0",
@@ -18,7 +20,7 @@
     "react-native": "0.84.1",
     "react-native-pager-view": "^8.0.0",
     "react-native-safe-area-context": "^5.5.2",
-    "react-native-svg": "^15.15.3"
+    "react-native-svg": "^15.15.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

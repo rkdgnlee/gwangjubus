@@ -1,12 +1,11 @@
 import { IArriveInBusStop } from "../../types/arrive";
+import { PUBLIC_API_PRIVATE_KEY, API_STOP_ARRIVE_URL } from '@env';
 
 export const getSpecifyArriveInfoInBusStop = async (cityCode: number, nodeId: string, routeId: string) : Promise<IArriveInBusStop[]> => {
-  const apiKey = process.env.PUBLIC_API_PRIVATE_KEY;
-  const apiUrl = process.env.API_STOP_ARRIVE_URL;
 
   try {
     const response = await fetch(
-      `${apiUrl}/getSttnAcctoSpcifyRouteBusArvlPrearngeInfoList?serviceKey=${apiKey}&pageNo=1&numOfRows=200&_type=json&cityCode=${cityCode}&nodeId=${nodeId}&routeId=${routeId}`
+      `${API_STOP_ARRIVE_URL}/getSttnAcctoSpcifyRouteBusArvlPrearngeInfoList?serviceKey=${PUBLIC_API_PRIVATE_KEY}&pageNo=1&numOfRows=200&_type=json&cityCode=${cityCode}&nodeId=${nodeId}&routeId=${routeId}`
     );
     const data = await response.json();
     const item = data.response.body.items.item;

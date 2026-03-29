@@ -1,34 +1,51 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-
-// 더미 데이터
-const FAVORITES = [
-  { id: '1', title: '출근길', type: 'BUS', busName: '봉선27', stopName: '전남대후문', direction: '전남대 방면' },
-  { id: '2', title: '집으로', type: 'STOP', stopName: '광주역', direction: '북구청 방면', busName: null },
-  { id: '3', title: '헬스장', type: 'BUS', busName: '일곡38', stopName: '전대사거리', direction: '경신여고 방면' },
-  { id: '4', title: '자주 가는 카페', type: 'STOP', stopName: '충장로입구', direction: '문화전당 방면', busName: null },
-  { id: '5', title: '본가', type: 'BUS', busName: '송정19', stopName: '광주송정역', direction: '공항 방면' },
-];
+import { IFavorite, IFavoriteStop, IFavoriteBus } from '../../types/favorite';
+import { useFavorites } from '../../hooks/favorites/useFavorites';
 
 interface Props {
   onNavigate: (type: 'bus' | 'stop', data: any) => void;
 }
 
 const FavoriteSection = ({ onNavigate }: Props) => {
-  const handlePress = (item: any) => {
-    // 더미 데이터를 상세 화면 포맷에 맞게 변환하여 전달
-    if (item.type === 'BUS') {
-      onNavigate('bus', { id: item.id, name: item.busName, type: '간선', direction: item.direction });
+  const { favorites, load } = useFavorites();
+
+  React.useEffect(() => { load(); }, []);
+
+  const handlePress = (item: IFavorite) => {
+    if (item.type === 'stop') {
+      const s = item as IFavoriteStop;
+      onNavigate('stop', { nodeid: s.nodeid, nodenm: s.nodenm, nodeno: s.nodeno });
     } else {
-      onNavigate('stop', { id: item.id, name: item.stopName, direction: item.direction });
+      const b = item as IFavoriteBus;
+      onNavigate('bus', {
+        routeid: b.routeid, routeno: b.routeno, routetp: b.routetp,
+        startnodenm: b.startnodenm, endnodenm: b.endnodenm,
+      });
     }
   };
 
+  const getSubtitle = (item: IFavorite) => {
+    if (item.type === 'stop') return `정류소 ${(item as IFavoriteStop).nodeno}`;
+    const b = item as IFavoriteBus;
+    return `${b.startnodenm} → ${b.endnodenm}`;
+  };
+
+  if (favorites.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyEmoji}>🔖</Text>
+        <Text style={styles.emptyTitle}>저장한 항목이 없어요</Text>
+        <Text style={styles.emptyDesc}>정류장이나 버스 노선을 저장해보세요!</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.headerTitle}>즐겨찾기</Text>
+      <Text style={styles.headerTitle}>저장</Text>
       <FlatList
-        data={FAVORITES}
+        data={[...favorites].sort((a, b) => b.savedAt - a.savedAt)}
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.row}
@@ -36,19 +53,17 @@ const FavoriteSection = ({ onNavigate }: Props) => {
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={() => handlePress(item)}>
             <View style={styles.cardHeader}>
-              <Text style={styles.emoji}>{item.type === 'BUS' ? '🚌' : '🚏'}</Text>
-              <Text style={styles.userTitle}>{item.title}</Text>
+              <Text style={styles.emoji}>{item.emoji}</Text>
+              {item.memo ? <Text style={styles.userTitle}>{item.memo}</Text> : null}
             </View>
-            
             <View style={styles.infoContainer}>
-              {item.type === 'BUS' ? (
-                <>
-                  <Text style={styles.busName}>{item.busName}</Text>
-                  <Text style={styles.stopName}>{item.stopName}</Text>
-                </>
-              ) : (
-                <Text style={[styles.busName, { color: '#333' }]}>{item.stopName}</Text>
-              )}
+              <View style={styles.typeBadge}>
+                <Text style={styles.typeBadgeText}>{item.type === 'stop' ? '정류장' : '버스'}</Text>
+              </View>
+              <Text style={styles.mainName}>
+                {item.type === 'stop' ? (item as IFavoriteStop).nodenm : `${(item as IFavoriteBus).routeno}번`}
+              </Text>
+              <Text style={styles.subName}>{getSubtitle(item)}</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -59,43 +74,28 @@ const FavoriteSection = ({ onNavigate }: Props) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#191F28', // Toss Black
-    marginBottom: 15,
-    marginTop: 24,
-  },
-  listContent: {
-    paddingBottom: 10,
-  },
-  row: {
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
+  container: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
+  headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#191F28', marginBottom: 15, marginTop: 24 },
+  listContent: { paddingBottom: 10 },
+  row: { justifyContent: 'space-between', marginBottom: 12 },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 12,
-    width: '48%', // 2열 배치
-    aspectRatio: 4 / 3, // 4:3 비율 고정
-    elevation: 1, // 안드로이드 그림자
-    shadowColor: '#000', // iOS 그림자
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
+    backgroundColor: '#fff', borderRadius: 16, padding: 14, width: '48%',
+    aspectRatio: 4 / 3,
+    elevation: 1, shadowColor: '#000', shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 }, shadowRadius: 8,
   },
-  cardHeader: { marginBottom: 8 },
-  emoji: { fontSize: 22, marginBottom: 4 },
-  userTitle: { fontSize: 16, fontWeight: '700', color: '#333' },
-  infoContainer: { marginTop: 'auto' }, // 내용을 아래로 밀착
-  busName: { fontSize: 18, fontWeight: '700', color: '#2E7D32', marginBottom: 2 },
-  stopName: { fontSize: 13, color: '#4E5968', fontWeight: '500' },
+  cardHeader: { marginBottom: 6 },
+  emoji: { fontSize: 24, marginBottom: 2 },
+  userTitle: { fontSize: 13, fontWeight: '700', color: '#333' },
+  infoContainer: { marginTop: 'auto' },
+  typeBadge: { backgroundColor: '#EEF6F0', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, alignSelf: 'flex-start', marginBottom: 4 },
+  typeBadgeText: { fontSize: 11, color: '#2E7D32', fontWeight: '600' },
+  mainName: { fontSize: 16, fontWeight: '700', color: '#191F28', marginBottom: 2 },
+  subName: { fontSize: 12, color: '#8B95A1' },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  emptyEmoji: { fontSize: 48, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: 'bold', color: '#191F28', marginBottom: 8 },
+  emptyDesc: { fontSize: 14, color: '#8B95A1' },
 });
 
 export default FavoriteSection;
