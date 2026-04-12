@@ -6,6 +6,7 @@ export const getBusStopThroghRouteList = async (
   nodeid: string,
   numOfRows: number = 50
 ): Promise<IStopThroghBusRoute[]> => {
+  console.log(nodeid)
   try {
     const response = await fetch(
       `${API_STOP_URL}/getSttnThrghRouteList?serviceKey=${PUBLIC_API_PRIVATE_KEY}&pageNo=1&numOfRows=${numOfRows}&_type=json&cityCode=${cityCode}&nodeid=${nodeid}`

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity, FlatList,
   ActivityIndicator, RefreshControl, Modal, TextInput,
-  KeyboardAvoidingView, Platform, Pressable
+  KeyboardAvoidingView, Platform, Pressable, Animated, PanResponder
 } from 'react-native';
 import { getBusTypeColor } from '../../constants/busColors';
 import { IArriveWithDestination, useArriveInfoInBusStop } from '../../hooks/Arrive/useArriveInfoInBusStop';
@@ -18,9 +18,8 @@ const formatArrTime = (seconds: number): string => {
   if (seconds < 60) return '곧 도착';
   const min = Math.floor(seconds / 60);
   const sec = seconds % 60;
-  const roundedSec = Math.floor(sec / 10) * 10;
-  if (roundedSec === 0) return `${min}분`;
-  return `${min}분 ${roundedSec}초`;
+  if (sec === 0) return `${min}분`;
+  return `${min}분 ${sec}초`;
 };
 
 const CITY_CODE_MAP: Record<string, number> = {
@@ -35,9 +34,11 @@ interface BusStopDetailProps {
   cityName: string;
   onBack: () => void;
   onBusPress: (busInfo: any) => void;
+  activeAlarmId?: string | null;
+  onToggleAlarm?: (item: IArriveWithDestination, stopInfo: any, cityCode: number) => void;
 }
 
-const BusStopDetail = ({ stopInfo, cityName, onBack, onBusPress }: BusStopDetailProps) => {
+const BusStopDetail = ({ stopInfo, cityName, onBack, onBusPress, activeAlarmId, onToggleAlarm }: BusStopDetailProps) => {
   const cityCode = CITY_CODE_MAP[cityName] || 24;
   const { locations, loading, error, search, reset } = useArriveInfoInBusStop();
   const { addStop, removeFavorite, isStopSaved, getFavoriteId, load } = useFavorites();
@@ -45,8 +46,11 @@ const BusStopDetail = ({ stopInfo, cityName, onBack, onBusPress }: BusStopDetail
   const [refreshing, setRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [saveModalVisible, setSaveModalVisible] = useState(false);
+
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [showRefreshOverlay, setShowRefreshOverlay] = useState(false);
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
   
-  const { LiveActivityModule } = NativeModules; // iOS 전용 모듈 브릿지
 
   // 버스 위치 데이터 참조 (인터벌 내에서 최신 데이터를 참조하기 위함)
   const locationsRef = useRef(locations);
@@ -54,106 +58,49 @@ const BusStopDetail = ({ stopInfo, cityName, onBack, onBusPress }: BusStopDetail
     locationsRef.current = locations;
   }, [locations]);
 
-  // 알람 감시 상태
-  const [monitoringRouteId, setMonitoringBus] = useState<string | null>(null);
-  const [lastPrevCount, setLastPrevCount] = useState<number | null>(null);
-  const [showGuide, setShowGuide] = useState(true); // 처음 진입 시 도움말 표시 여부
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setElapsedSeconds(prev => {
+        const next = prev + 1;
+        // 약 60초가 지나면 새로고침 안내 표시 (모든 버스가 분 단위에 도달했을 시점)
+        if (next === 60) {
+          setShowRefreshOverlay(true);
+          Animated.timing(overlayOpacity, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }).start();
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [locations]);
 
-  const saved = isStopSaved(stopInfo.nodeid);
+  // 오버레이 슬라이드 다운 제거를 위한 PanResponder
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 50) { // 50이상 아래로 슬라이드 시
+          Animated.timing(overlayOpacity, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => setShowRefreshOverlay(false));
+        }
+      },
+    })
+  ).current;
 
   useEffect(() => {
     load();
     search(cityCode, stopInfo.nodeid);
-    setupNotificationChannels();
     return () => reset();
   }, []);
 
-  // 안드로이드 알림 채널 초기화 (LTS 기준)
-  const setupNotificationChannels = async () => {
-    if (Platform.OS === 'android') {
-      await notifee.createChannel({
-        id: 'bus-arrival-alert',
-        name: '버스 도착 알림',
-        lights: true,
-        lightColor: AndroidColor.GREEN,
-        importance: AndroidImportance.HIGH,
-        vibration: true,
-      });
-    }
-  };
-
-  // 실제 시스템 알림 발송 함수
-  const triggerSystemNotification = async (routeno: string, currentStops: number) => {
-    if (Platform.OS === 'android') {
-      await notifee.displayNotification({
-        title: `🚌 ${routeno}번 버스 접근 중!`,
-        body: `현재 ${currentStops}정거장 전입니다. 준비하세요!`,
-        android: {
-          channelId: 'bus-arrival-alert',
-          smallIcon: 'ic_launcher', // 앱 아이콘 설정 필요
-          pressAction: { id: 'default' },
-          importance: AndroidImportance.HIGH,
-        },
-      });
-    } else if (Platform.OS === 'ios' && LiveActivityModule) {
-      // iOS Dynamic Island 업데이트 호출
-      LiveActivityModule.updateActivity(routeno, currentStops);
-    }
-    
-    Vibration.vibrate([0, 500, 100, 500]);
-  };
-
-  // 알람 감시 로직 (30초 주기)
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    // 알람 설정 시 iOS Live Activity 시작 (브릿지 호출)
-    if (monitoringRouteId && Platform.OS === 'ios' && LiveActivityModule) {
-      LiveActivityModule.startActivity(stopInfo.nodenm, monitoringRouteId);
-    }
-
-    if (monitoringRouteId) {
-      interval = setInterval(async () => {
-        try {
-          const result = await getSpecifyArriveInfoInBusStop(cityCode, stopInfo.nodeid, monitoringRouteId);
-          if (result && result.length > 0) {
-            const currentStops = result[0].arrprevstationcnt;
-            
-            // 정거장 수가 줄어들었을 때 알림
-            if (lastPrevCount !== null && currentStops < lastPrevCount) {
-              const targetBus = locationsRef.current.find(l => l.routeid === monitoringRouteId);
-              if (targetBus) {
-                triggerSystemNotification(targetBus.routeno, currentStops);
-              }
-            }
-            setLastPrevCount(currentStops);
-          }
-        } catch (e) {
-          console.error("Monitoring error:", e);
-        }
-      }, 30000);
-    }
-    
-    return () => {
-      clearInterval(interval);
-      // 종료 시 Live Activity 종료
-      if (Platform.OS === 'ios' && LiveActivityModule) LiveActivityModule.stopActivity();
-    };
-  }, [monitoringRouteId, lastPrevCount, cityCode, stopInfo.nodeid, stopInfo.nodenm]);
-
-  const toggleAlarm = (item: IArriveWithDestination) => {
-    if (monitoringRouteId === item.routeid) {
-      setMonitoringBus(null);
-      setLastPrevCount(null);
-      if (Platform.OS === 'android') {
-        notifee.cancelAllNotifications();
-      }
-    } else {
-      setMonitoringBus(item.routeid);
-      setLastPrevCount(item.arrprevstationcnt ?? null);
-      Alert.alert("알림 설정", `${item.routeno}번 버스 추적을 시작합니다. 정거장이 줄어들면 알려드릴게요!`);
-    }
-  };
+  const [showGuide, setShowGuide] = useState(true);
+  const saved = isStopSaved(stopInfo.nodeid);
 
   const sortedLocations = useMemo(() => {
     return [...locations].sort((a, b) => (a.arrtime ?? 999999) - (b.arrtime ?? 999999));
@@ -161,6 +108,8 @@ const BusStopDetail = ({ stopInfo, cityName, onBack, onBusPress }: BusStopDetail
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
+    setElapsedSeconds(0);
+    setShowRefreshOverlay(false);
     await search(cityCode, stopInfo.nodeid);
     setRefreshing(false);
   }, [cityCode, stopInfo.nodeid]);
@@ -191,10 +140,20 @@ const BusStopDetail = ({ stopInfo, cityName, onBack, onBusPress }: BusStopDetail
 
   const renderBusItem = ({ item }: { item: IArriveWithDestination }) => {
     const color = getBusTypeColor(cityName, item.routetp);
+    
+    // 실시간 카운트다운 계산 (분 단위 밑으로는 안 줄어들게 처리)
+    const originalTime = item.arrtime ?? 0;
+    const minLimit = Math.floor(originalTime / 60) * 60;
+    const currentTime = Math.max(originalTime - elapsedSeconds, minLimit);
+
     const hasArrival = item.arrtime !== undefined && item.arrtime !== null;
     const arrprevstationcnt = item.arrprevstationcnt ?? 0;
-    const isCritical = hasArrival && arrprevstationcnt <= 2;
-    const isWarning = hasArrival && item.arrtime! <= 300;
+    const isCritical = hasArrival && (arrprevstationcnt <= 2 || currentTime <= 60);
+    const isWarning = hasArrival && currentTime <= 300;
+
+    // 시간 상태 분류
+    const isSoon = currentTime < 60; // 곧 도착
+    const isMinutesOnly = !isSoon && currentTime % 60 === 0; // N분
 
     return (
       <TouchableOpacity style={styles.busItem} activeOpacity={0.7} onPress={() => onBusPress(item)}>
@@ -208,19 +167,27 @@ const BusStopDetail = ({ stopInfo, cityName, onBack, onBusPress }: BusStopDetail
               <View style={styles.timeRow}>
                 <TouchableOpacity 
                   style={styles.alarmIcon} 
-                  onPress={() => toggleAlarm(item)}
+                  onPress={() => onToggleAlarm?.(item, stopInfo, cityCode)}
                 >
-                  {monitoringRouteId === item.routeid ? (
+                  {activeAlarmId === item.routeid ? (
                     <Bell size={20} color="#31D698" fill="#31D698" />
                   ) : (
                     <Bell size={20} color="#D1D6DB" />
                   )}
                 </TouchableOpacity>
-                <View style={[styles.timeBadge, isCritical ? styles.criticalBadge : isWarning ? styles.warningBadge : styles.normalBadge]}>
-                <Text style={[styles.remainTime, isCritical ? styles.criticalText : isWarning ? styles.warningText : styles.normalText]}>
-                  {formatArrTime(item.arrtime!)}
-                </Text>
-              </View>
+                <View 
+                  style={[
+                    styles.timeBadge,
+                    isSoon ? styles.timeBadgeMedium : 
+                    isMinutesOnly ? styles.timeBadgeShort : 
+                    styles.timeBadgeLong,
+                    isCritical ? styles.criticalBadge : isWarning ? styles.warningBadge : styles.normalBadge
+                  ]}
+                >
+                  <Text style={[styles.remainTime, isCritical ? styles.criticalText : isWarning ? styles.warningText : styles.normalText]}>
+                    {formatArrTime(currentTime)}
+                  </Text>
+                </View>
               </View>
               <Text style={styles.remainStop}>{arrprevstationcnt}정거장 전</Text>
             </>
@@ -285,6 +252,19 @@ const BusStopDetail = ({ stopInfo, cityName, onBack, onBusPress }: BusStopDetail
         />
       )}
 
+      {/* 새로고침 안내 오버레이 */}
+      {showRefreshOverlay && (
+        <Animated.View 
+          style={[styles.refreshOverlay, { opacity: overlayOpacity }]}
+          {...panResponder.panHandlers}
+        >
+          <View style={styles.refreshContent}>
+            <Text style={styles.refreshText}>정확한 정보를 위해{"\n"}화면을 당겨 새로고침 해주세요</Text>
+            <Text style={styles.refreshSubText}>↓ 아래로 밀어서 닫기</Text>
+          </View>
+        </Animated.View>
+      )}
+
       {/* 공통 메뉴 바텀시트 적용 */}
       <MenuBottomSheet
         visible={menuVisible}
@@ -339,7 +319,15 @@ const styles = StyleSheet.create({
   busInfoRight: { alignItems: 'flex-end' },
   timeRow: { flexDirection: 'row', alignItems: 'center' },
   alarmIcon: { padding: 8, marginRight: 4 },
-  timeBadge: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, marginBottom: 6 },
+  timeBadge: { 
+    paddingVertical: 6, 
+    borderRadius: 8, 
+    marginBottom: 6,
+    alignItems: 'center',
+  },
+  timeBadgeLong: { width: 86 },    // 00분 00초
+  timeBadgeMedium: { width: 64 },  // 곧 도착
+  timeBadgeShort: { width: 50 },   // 00분
   normalBadge: { backgroundColor: '#F2F4F6' },
   warningBadge: { backgroundColor: '#E7F9ED' },
   criticalBadge: { backgroundColor: '#31D698' },
@@ -391,6 +379,23 @@ const styles = StyleSheet.create({
   },
   saveButton: { backgroundColor: '#ADEBB3', borderRadius: 14, padding: 16, alignItems: 'center' },
   saveButtonText: { fontSize: 17, fontWeight: 'bold', color: '#191F28' },
+
+  refreshOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  refreshContent: {
+    backgroundColor: '#fff',
+    padding: 30,
+    borderRadius: 20,
+    alignItems: 'center',
+    elevation: 5,
+  },
+  refreshText: { fontSize: 16, fontWeight: 'bold', color: '#191F28', textAlign: 'center', lineHeight: 24 },
+  refreshSubText: { fontSize: 13, color: '#8B95A1', marginTop: 16 },
 });
 
 export default BusStopDetail;

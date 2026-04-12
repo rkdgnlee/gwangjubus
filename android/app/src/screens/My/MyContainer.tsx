@@ -18,9 +18,9 @@ const MyContainer = ({ onNavigate }: Props) => {
         <FavoriteSection onNavigate={onNavigate} />
       </View>
       {/* 하단 50% */}
-      <View style={styles.bottomSection}>
+      {/* <View style={styles.bottomSection}>
         <ScheduleSection onNavigate={onNavigate} />
-      </View>
+      </View> */}
     </View>
   );
 };
@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F2F4F6',
   },
-  topSection: { flex: 0.55 },
+  topSection: { flex: 1 },
   bottomSection: { flex: 0.45 },
 });
 

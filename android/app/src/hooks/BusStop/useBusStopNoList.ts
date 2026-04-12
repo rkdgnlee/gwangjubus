@@ -25,7 +25,7 @@ export const useBusStopNoList = () => {
       const stopsWithRoutes = await Promise.all(
         stopList.map(async (stop) => {
           try {
-            const routes = await getBusStopThroghRouteList(cityCode, stop.nodeid, 3);
+            const routes = await getBusStopThroghRouteList(cityCode, stop.nodeid, 10);
             return { ...stop, routes: Array.isArray(routes) ? routes : [routes] };
           } catch {
             return { ...stop, routes: [] };

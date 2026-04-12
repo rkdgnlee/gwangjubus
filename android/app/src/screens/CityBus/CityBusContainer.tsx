@@ -16,9 +16,11 @@ const CITY_CODE_MAP: Record<string, number> = {
 interface Props {
   cityName: string;
   initialData?: { type: 'bus' | 'stop', data: any } | null;
+  activeAlarmId?: string | null;
+  onToggleAlarm?: (item: any, stopInfo: any, cityCode: number) => void;
 }
 
-const CityBusContainer = ({ cityName, initialData }: Props) => {
+const CityBusContainer = ({ cityName, initialData, activeAlarmId, onToggleAlarm }: Props) => {
   const [searchMode, setSearchMode] = useState<'bus' | 'stop'>('bus');
   const [searchText, setSearchText] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
@@ -103,6 +105,8 @@ const CityBusContainer = ({ cityName, initialData }: Props) => {
           cityName={cityName}
           onBack={popScreen}
           onBusPress={(bus) => pushScreen('bus', bus)}
+          activeAlarmId={activeAlarmId}
+          onToggleAlarm={onToggleAlarm}
         />
       );
     }

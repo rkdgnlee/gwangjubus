@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
 import { favoriteStorage } from "../utils/favoriteStorage";
-import { FavoriteBus } from "../types/favorite";
+import { IFavoriteBus } from "../types/favorite";
 import { Text, View, StyleSheet, TouchableOpacity, SafeAreaView, Animated, Easing } from "react-native";
 import MyContainer from "./My/MyContainer";
 import CityBusContainer from "./CityBus/CityBusContainer";
 import SettingsContainer from "./Settings/SettingsContainer";
+import notifee, { EventType } from '@notifee/react-native';
 
 interface MainProps {
   cityName: string;
@@ -12,7 +13,7 @@ interface MainProps {
 }
 
 // 탭 타입 정의
-type TabType = 'My' | 'CityBus' | 'ExpressBus' | 'Settings';
+type TabType = 'My' | 'CityBus' | /* 'ExpressBus' | */ 'Settings';
 
 // 탭 버튼 컴포넌트 (애니메이션 적용)
 const TabButton = ({ 
@@ -57,7 +58,7 @@ const TabButton = ({
   const config = {
     My: { icon: "🏠", label: "홈" },
     CityBus: { icon: "🚌", label: "시내버스" },
-    ExpressBus: { icon: "🎫", label: "고속버스" },
+    // ExpressBus: { icon: "🎫", label: "고속버스" },
     Settings: { icon: "⚙️", label: "설정" },
   };
 
@@ -82,10 +83,36 @@ const TabButton = ({
 
 const MainScreen = ({ cityName, onReset }: MainProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('My');
-  const [favorites, setFavorites] = useState<FavoriteBus[]>([]);
+  const [favorites, setFavorites] = useState<IFavoriteBus[]>([]);
   const [cityBusInitData, setCityBusInitData] = useState<{ type: 'bus' | 'stop', data: any } | null>(null);
   const [cityBusKey, setCityBusKey] = useState(0); // 시내버스 탭 초기화를 위한 카운터
+  useEffect(() => {
+    // 포그라운드
+    const unsubscribe = notifee.onForegroundEvent(({ type, detail }) => {
+      if (type === EventType.PRESS && detail.notification?.data) {
+        const data = detail.notification.data;
+        handleNavigationRequest('stop', {
+          nodeid: data.stopNodeid,
+          nodenm: data.stopNodenm,
+          nodeno: data.stopNodeno,
+        });
+      }
+    });
 
+    // 백그라운드/종료 후 진입
+    notifee.getInitialNotification().then(notification => {
+      if (notification?.notification?.data) {
+        const data = notification.notification.data;
+        handleNavigationRequest('stop', {
+          nodeid: data.stopNodeid,
+          nodenm: data.stopNodenm,
+          nodeno: data.stopNodeno,
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
   useEffect(() => {
     loadFavorites();
   }, []);
@@ -115,6 +142,7 @@ const MainScreen = ({ cityName, onReset }: MainProps) => {
             cityName={cityName} 
           />
         );
+      /*
       case 'ExpressBus':
         return (
           <View style={styles.centerContainer}>
@@ -122,6 +150,7 @@ const MainScreen = ({ cityName, onReset }: MainProps) => {
             <Text style={{ marginTop: 8, color: '#999' }}>준비중인 기능입니다.</Text>
           </View>
         );
+      */
       case 'Settings':
         return (
           <SettingsContainer cityName={cityName} onChangeRegion={onReset} />
@@ -144,7 +173,7 @@ const MainScreen = ({ cityName, onReset }: MainProps) => {
 
           {/* 커스텀 바텀 네비게이션 바 */}
           <View style={styles.bottomNav}>
-            {(['My', 'CityBus', 'ExpressBus', 'Settings'] as TabType[]).map((tab) => (
+            {(['My', 'CityBus', /* 'ExpressBus', */ 'Settings'] as TabType[]).map((tab) => (
               <TabButton
                 key={tab}
                 tab={tab}

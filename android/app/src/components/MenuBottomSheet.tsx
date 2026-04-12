@@ -42,7 +42,7 @@ const MenuBottomSheet = ({
             </TouchableOpacity>
           )}
           
-          <TouchableOpacity style={styles.menuItem} onPress={onClose}>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Text style={[styles.menuItemText, { color: '#aaa' }]}>닫기</Text>
           </TouchableOpacity>
         </View>
@@ -63,6 +63,7 @@ const styles = StyleSheet.create({
   },
   menuItem: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
   menuItemText: { fontSize: 17, color: '#191F28', fontWeight: '500' },
+  closeButton: { paddingVertical: 16, alignItems: 'center' },
 });
 
 export default MenuBottomSheet;

@@ -23,11 +23,11 @@ const BusResultList = ({ data, mode, cityName, onPressItem }: BusResultListProps
           onPress={() => onPressItem(item)}
         >
           <View style={{ flex: 1 }}>
-            <Text style={styles.stopName}>📍 {stopItem.nodenm}</Text>
+            <Text style={styles.stopName}>🚌 {stopItem.nodenm}</Text>
             <View style={styles.routeList}>
               {stopItem.routes.slice(0, 3).map((route) => (
                 <Text key={route.routeid} style={styles.routeText}>
-                  🚌 {route.routeno}  🚩 {route.startnodenm} → 🏁 {route.endnodenm}
+                   <Text style={styles.routeNo}>{route.routeno}</Text>  🚩 {route.startnodenm} → 🏁 {route.endnodenm}
                 </Text>
               ))}
               {stopItem.routes.length > 3 && (
@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
   stopNo: { fontSize: 13, color: '#8B95A1', marginTop: 2 },
   routeList: { marginTop: 8, gap: 4 },
   routeText: { fontSize: 12, color: '#555' },
+  routeNo: { color: '#191F28' },
   moreRoutes: { fontSize: 12, color: '#ADEBB3', fontWeight: '600', marginTop: 2 },
   emptyContainer: { alignItems: 'center', marginTop: 50 },
   emptyText: { color: '#aaa', fontSize: 16 },
