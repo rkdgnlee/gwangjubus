@@ -1,18 +1,16 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, FlatList,
-  ActivityIndicator, RefreshControl, Modal, TextInput,
-  KeyboardAvoidingView, Platform, Pressable, Animated, PanResponder
+  ActivityIndicator, RefreshControl, Animated, PanResponder,
+  Alert
 } from 'react-native';
 import { getBusTypeColor } from '../../constants/busColors';
 import { IArriveWithDestination, useArriveInfoInBusStop } from '../../hooks/Arrive/useArriveInfoInBusStop';
 import { useFavorites } from '../../hooks/favorites/useFavorites';
 import SaveModal from '../../components/SaveModal';
 import MenuBottomSheet from '../../components/MenuBottomSheet';
-import { getSpecifyArriveInfoInBusStop } from '../../services/Arrive/getSpecifyArriveInfoInBusStop';
 import { Bell, Info } from 'lucide-react-native';
-import { Alert, Vibration, NativeModules } from 'react-native';
-import notifee, { AndroidImportance, AndroidColor } from '@notifee/react-native';
+import { busHistoryStorage } from '../../utils/busHistoryStorage';
 
 const formatArrTime = (seconds: number): string => {
   if (seconds < 60) return '곧 도착';
@@ -27,7 +25,6 @@ const CITY_CODE_MAP: Record<string, number> = {
   '인천': 23, '대전': 25, '울산': 21, '세종': 12, '경기': 31,
 };
 
-const DEFAULT_EMOJI = '🔖';
 
 interface BusStopDetailProps {
   stopInfo: any;
@@ -137,11 +134,36 @@ const BusStopDetail = ({ stopInfo, cityName, onBack, onBusPress, activeAlarmId, 
     setMenuVisible(false);
     setSaveModalVisible(true);
   };
-
+  const toggleAlarm = (item: IArriveWithDestination) => {
+  if (onToggleAlarm) {
+    onToggleAlarm(item, stopInfo, cityCode);
+  }
+};
+  const handleBoardingPrompt = (item: IArriveWithDestination) => {
+    Alert.alert(
+      '탑승 확인',
+      `${item.routeno}번 버스를 탑승하셨나요?`,
+      [
+        { text: '아니요', style: 'cancel' },
+        {
+          text: '네, 탔어요!',
+          onPress: async () => {
+            await busHistoryStorage.add({
+              routeid: item.routeid,
+              routeno: item.routeno,
+              stopNodeid: stopInfo.nodeid,
+              stopNodenm: stopInfo.nodenm,
+              cityName,
+            });
+            Alert.alert('✅ 기록 완료', '탑승 기록이 저장됐어요!');
+          },
+        },
+      ]
+    );
+  };
   const renderBusItem = ({ item }: { item: IArriveWithDestination }) => {
     const color = getBusTypeColor(cityName, item.routetp);
     
-    // 실시간 카운트다운 계산 (분 단위 밑으로는 안 줄어들게 처리)
     const originalTime = item.arrtime ?? 0;
     const minLimit = Math.floor(originalTime / 60) * 60;
     const currentTime = Math.max(originalTime - elapsedSeconds, minLimit);
@@ -151,51 +173,62 @@ const BusStopDetail = ({ stopInfo, cityName, onBack, onBusPress, activeAlarmId, 
     const isCritical = hasArrival && (arrprevstationcnt <= 2 || currentTime <= 60);
     const isWarning = hasArrival && currentTime <= 300;
 
-    // 시간 상태 분류
-    const isSoon = currentTime < 60; // 곧 도착
-    const isMinutesOnly = !isSoon && currentTime % 60 === 0; // N분
+    const isSoon = currentTime < 60;
+    const isMinutesOnly = !isSoon && currentTime % 60 === 0;
+    const isOneStopAway = arrprevstationcnt === 1; // ← 추가
 
     return (
-      <TouchableOpacity style={styles.busItem} activeOpacity={0.7} onPress={() => onBusPress(item)}>
-        <View style={styles.busInfoLeft}>
-          <Text style={[styles.busName, { color }]}>{item.routeno}</Text>
-          <Text style={styles.busDirection}>{item.endnodenm} 종점</Text>
-        </View>
-        <View style={styles.busInfoRight}>
-          {hasArrival ? (
-            <>
-              <View style={styles.timeRow}>
-                <TouchableOpacity 
-                  style={styles.alarmIcon} 
-                  onPress={() => onToggleAlarm?.(item, stopInfo, cityCode)}
-                >
-                  {activeAlarmId === item.routeid ? (
-                    <Bell size={20} color="#31D698" fill="#31D698" />
-                  ) : (
-                    <Bell size={20} color="#D1D6DB" />
-                  )}
-                </TouchableOpacity>
-                <View 
-                  style={[
+      <View>
+        <TouchableOpacity style={styles.busItem} activeOpacity={0.7} onPress={() => onBusPress({ ...item, fromNodeId: stopInfo.nodeid })}>
+          <View style={styles.busInfoLeft}>
+            <Text style={[styles.busName, { color }]}>{item.routeno}</Text>
+            <Text style={styles.busDirection}>{item.endnodenm} 종점</Text>
+          </View>
+          <View style={styles.busInfoRight}>
+            {hasArrival ? (
+              <>
+                <View style={styles.timeRow}>
+                  <TouchableOpacity 
+                    style={styles.alarmIcon} 
+                    onPress={() => onToggleAlarm?.(item, stopInfo, cityCode)}
+                  >
+                    {activeAlarmId === item.routeid ? (
+                      <Bell size={20} color="#31D698" fill="#31D698" />
+                    ) : (
+                      <Bell size={20} color="#D1D6DB" />
+                    )}
+                  </TouchableOpacity>
+                  <View style={[
                     styles.timeBadge,
                     isSoon ? styles.timeBadgeMedium : 
                     isMinutesOnly ? styles.timeBadgeShort : 
                     styles.timeBadgeLong,
                     isCritical ? styles.criticalBadge : isWarning ? styles.warningBadge : styles.normalBadge
-                  ]}
-                >
-                  <Text style={[styles.remainTime, isCritical ? styles.criticalText : isWarning ? styles.warningText : styles.normalText]}>
-                    {formatArrTime(currentTime)}
-                  </Text>
+                  ]}>
+                    <Text style={[styles.remainTime, isCritical ? styles.criticalText : isWarning ? styles.warningText : styles.normalText]}>
+                      {formatArrTime(currentTime)}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-              <Text style={styles.remainStop}>{arrprevstationcnt}정거장 전</Text>
-            </>
-          ) : (
-            <Text style={styles.noArrivalText}>도착 정보 없음</Text>
-          )}
-        </View>
-      </TouchableOpacity>
+                <Text style={styles.remainStop}>{arrprevstationcnt}정거장 전</Text>
+              </>
+            ) : (
+              <Text style={styles.noArrivalText}>도착 정보 없음</Text>
+            )}
+          </View>
+        </TouchableOpacity>
+
+        {/* 1정거장 전일 때만 탑승 버튼 표시 */}
+        {isOneStopAway && hasArrival && (
+          <TouchableOpacity
+            style={styles.boardingButton}
+            onPress={() => handleBoardingPrompt(item)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.boardingButtonText}>🚌 곧 도착해요!  탑승하셨나요?</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     );
   };
 
@@ -396,6 +429,26 @@ const styles = StyleSheet.create({
   },
   refreshText: { fontSize: 16, fontWeight: 'bold', color: '#191F28', textAlign: 'center', lineHeight: 24 },
   refreshSubText: { fontSize: 13, color: '#8B95A1', marginTop: 16 },
+
+  boardingButton: {
+    backgroundColor: '#E8FBF2',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: -4,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#31D698',
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  boardingButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1A7A4A',
+  },
+
 });
 
 export default BusStopDetail;

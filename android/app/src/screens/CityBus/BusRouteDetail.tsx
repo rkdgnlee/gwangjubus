@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   ActivityIndicator, RefreshControl, Modal, TextInput,
@@ -16,6 +16,7 @@ const CITY_CODE_MAP: Record<string, number> = {
   '인천': 23, '대전': 25, '울산': 21, '세종': 12, '경기': 31,
 };
 
+
 const DEFAULT_EMOJI = '🔖';
 
 interface BusRouteDetailProps {
@@ -23,9 +24,10 @@ interface BusRouteDetailProps {
   cityName: string;
   onBack: () => void;
   onStopPress: (stopInfo: any) => void;
+  targetNodeId?: string; // ← 추가
 }
 
-const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress }: BusRouteDetailProps) => {
+const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress, targetNodeId }: BusRouteDetailProps) => {
   const cityCode = CITY_CODE_MAP[cityName] || 24;
   const busColor = getBusTypeColor(cityName, busInfo.routetp);
   const { info, stops, locations, loading, error, fetch, refreshLocations } = useBusRouteDetail();
@@ -36,6 +38,7 @@ const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress }: BusRouteDeta
   const [saveModalVisible, setSaveModalVisible] = useState(false);
 
   const saved = isBusSaved(busInfo.routeid);
+  const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     load();
@@ -83,11 +86,28 @@ const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress }: BusRouteDeta
   const sortedStops = [...stops].sort((a, b) => a.nodeord - b.nodeord);
   const listData: any[] = sortedStops.map(s => ({ ...s, __type: 'stop' }));
 
+  // 기존 useEffect 아래에 추가
+  useEffect(() => {
+    if (!targetNodeId || listData.length === 0) return;
+    
+    const index = listData.findIndex(item => item.nodeid === targetNodeId);
+    if (index !== -1) {
+      // 데이터 렌더링 후 스크롤하도록 약간 딜레이
+      setTimeout(() => {
+        flatListRef.current?.scrollToIndex({
+          index,
+          animated: true,
+          viewPosition: 0.5, // 화면 정가운데
+        });
+      }, 300);
+    }
+  }, [targetNodeId, listData]);
+
   const renderStop = (item: IBusViaRoute, index: number, sectionStops: IBusViaRoute[]) => {
     const busesHere = locationMap[item.nodeid] || [];
     const isFirst = index === 0;
     const isLast = index === sectionStops.length - 1;
-
+    const isTarget = item.nodeid === targetNodeId;
     return (
       <View style={styles.itemContainer}>
         {busesHere.map((bus) => (
@@ -108,7 +128,10 @@ const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress }: BusRouteDeta
         ))}
 
         <TouchableOpacity
-          style={styles.stationRow}
+          style={[
+          styles.stationRow,
+          isTarget && styles.targetStationRow 
+          ]}
           onPress={() => onStopPress(item)}
           activeOpacity={0.6}
         >
@@ -167,7 +190,7 @@ const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress }: BusRouteDeta
             </View>
           </View>
           <Text style={styles.headerDirection}>
-            🚩 {busInfo.startnodenm}  →  🏁 {busInfo.endnodenm}
+            🚩 {info?.startnodenm ?? ""}  →  🏁 {info?.endnodenm ?? ""}
           </Text>
           {info && (
             <Text style={styles.headerInterval}>
@@ -183,10 +206,20 @@ const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress }: BusRouteDeta
 
       {/* 노선 리스트 */}
       <FlatList
+        ref={flatListRef}
         data={listData}
-        keyExtractor={(item, index) => item.nodeid ?? `divider-${index}`}
+        keyExtractor={(item, index) => `${item.nodeid}-${index}`}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
+        onScrollToIndexFailed={(info) => {
+          setTimeout(() => {
+            flatListRef.current?.scrollToIndex({
+              index: info.index,
+              animated: true,
+              viewPosition: 0.5,
+            });
+          }, 500);
+        }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#ADEBB3" />
         }
@@ -325,6 +358,31 @@ const styles = StyleSheet.create({
   },
   saveButton: { backgroundColor: '#ADEBB3', borderRadius: 14, padding: 16, alignItems: 'center' },
   saveButtonText: { fontSize: 17, fontWeight: 'bold', color: '#191F28' },
+
+  // styles.StyleSheet.create 안에 추가
+  targetStationRow: {
+    backgroundColor: '#E8FBF2',
+    borderRadius: 12,
+    marginHorizontal: -8,
+    paddingHorizontal: 8,
+  },
+  targetNodeCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderColor: '#31D698',
+    borderWidth: 2.5,
+    marginTop: -9,
+  },
+  targetStopName: {
+    color: '#191F28',
+    fontWeight: 'bold',
+  },
+  targetBadgeText: {
+    fontSize: 12,
+    color: '#31D698',
+    fontWeight: '600',
+  },
 });
 
 export default BusRouteDetail;

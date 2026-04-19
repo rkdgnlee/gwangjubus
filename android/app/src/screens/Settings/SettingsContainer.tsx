@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal, TextInput, ScrollView, Linking, Clipboard, Platform } from 'react-native';
 import { storage } from '../../utils/storage';
+import HistoryManageScreen from '../My/HistoryManageScreen';
 
 interface SettingsProps {
   cityName: string;
@@ -8,16 +9,14 @@ interface SettingsProps {
 }
 
 const SettingsContainer = ({ cityName, onChangeRegion }: SettingsProps) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // 더미 로그인 상태
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [rating, setRating] = useState(5);
   const [review, setReview] = useState('');
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showHistoryManage, setShowHistoryManage] = useState(false); // ← 추가
 
-  const handleLogin = () => {
-    // 실제 로그인 로직 대신 토글
-    setIsLoggedIn(!isLoggedIn);
-    if (!isLoggedIn) Alert.alert("로그인", "로그인 되었습니다.");
-    else Alert.alert("로그아웃", "로그아웃 되었습니다.");
+  const handleFeatureNotice = () => {
+    Alert.alert("준비 중인 기능", "실제 버스 탑승 기록을 기반으로 나만의 이동 타임라인을 만드는 기능이 업데이트될 예정입니다.");
   };
 
   const handleRegionChange = () => {
@@ -34,29 +33,53 @@ const SettingsContainer = ({ cityName, onChangeRegion }: SettingsProps) => {
     ]);
   };
 
-  const submitRating = () => {
-    setShowRatingModal(false);
-    Alert.alert("평가 완료", "소중한 의견 감사합니다!");
-    setReview('');
-    setRating(5);
+  const handleRating = () => {
+    // TODO: 실제 출시 후 발급받은 패키지명과 앱 아이디로 교체하세요.
+    const GOOGLE_PACKAGE_NAME = 'com.sardinespicysalad.gwangjubus'; 
+    const APPLE_APP_ID = '1234567890'; 
+
+    const url = Platform.OS === 'android'
+      ? `market://details?id=${GOOGLE_PACKAGE_NAME}`
+      : `itms-apps://itunes.apple.com/app/id${APPLE_APP_ID}?action=write-review`;
+
+    Linking.openURL(url).catch(() => {
+      // 스토어 앱을 열 수 없는 경우 브라우저로 연결
+      const webUrl = Platform.OS === 'android'
+        ? `https://play.google.com/store/apps/details?id=${GOOGLE_PACKAGE_NAME}`
+        : `https://apps.apple.com/app/id${APPLE_APP_ID}`;
+      
+      Linking.openURL(webUrl);
+    });
   };
 
+  const handleFeedback = () => {
+    const email = 'sardinespicysalad@google.com';
+    const subject = encodeURIComponent('[광주버스] 개발자 피드백');
+    const body = encodeURIComponent('의견을 자유롭게 작성해주세요.');
+    const url = `mailto:${email}?subject=${subject}&body=${body}`;
+
+    Linking.openURL(url).catch(() => {
+      setShowEmailModal(true);
+    });
+  };
+
+  const copyToClipboard = (text: string) => {
+    Clipboard.setString(text);
+    Alert.alert("복사 완료", "이메일 주소가 클립보드에 복사되었습니다.");
+  };
+  if (showHistoryManage) {
+    return <HistoryManageScreen onBack={() => setShowHistoryManage(false)} />;
+  }
   return (
     <ScrollView style={styles.container}>
       {/* 1. 상단 로그인/회원정보 영역 */}
-      <TouchableOpacity style={styles.profileSection} onPress={handleLogin} activeOpacity={0.8}>
+      <TouchableOpacity style={styles.profileSection} onPress={handleFeatureNotice} activeOpacity={0.8}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{isLoggedIn ? "😎" : "👤"}</Text>
+          <Text style={styles.avatarText}>🗓️</Text>
         </View>
         <View style={styles.profileInfo}>
-          {isLoggedIn ? (
-            <>
-              <Text style={styles.emailText}>user@gwangjubus.com</Text>
-              <Text style={styles.regionText}>현재 지역: <Text style={styles.regionHighlight}>{cityName}</Text></Text>
-            </>
-          ) : (
-            <Text style={styles.loginText}>로그인하기 {'>'}</Text>
-          )}
+          <Text style={styles.featureTitle}>나만의 버스 타임라인</Text>
+          <Text style={styles.featureDesc}>버스 탑승 기록을 저장하고{"\n"}나만의 이동 로그를 확인해 보세요 (준비 중)</Text>
         </View>
       </TouchableOpacity>
 
@@ -65,15 +88,20 @@ const SettingsContainer = ({ cityName, onChangeRegion }: SettingsProps) => {
       {/* 2. 메뉴 리스트 */}
       <View style={styles.menuContainer}>
         <SettingsItem title="지역 변경" onPress={handleRegionChange} icon="🌏" />
-        <SettingsItem title="앱 평가하기" onPress={() => setShowRatingModal(true)} icon="⭐️" />
+        <SettingsItem title="앱 평가하기" onPress={handleRating} icon="⭐️" />
         <SettingsItem 
           title="개발자 피드백" 
-          onPress={() => Alert.alert("피드백", "개발자에게 의견을 보냅니다.\n(dev@example.com)")} 
+          onPress={handleFeedback} 
           icon="💬" 
+        />
+        <SettingsItem
+          title="탑승 기록 관리"
+          onPress={() => setShowHistoryManage(true)}
+          icon="🗂️"
         />
         <SettingsItem 
           title="출처 및 오픈소스 라이선스" 
-          onPress={() => Alert.alert("오픈소스 라이선스", "React Native\nIcons by ...")} 
+          onPress={() => Alert.alert("오픈소스 라이선스", "공공데이터포털API활용(국토교통부)")} 
           icon="📄" 
         />
         
@@ -83,31 +111,25 @@ const SettingsContainer = ({ cityName, onChangeRegion }: SettingsProps) => {
         </View>
       </View>
 
-      {/* 3. 앱 평가 모달 (Dialog) */}
-      <Modal transparent visible={showRatingModal} animationType="fade">
+      {/* 이메일 복사 전용 모달 */}
+      <Modal transparent visible={showEmailModal} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>앱 평가하기</Text>
-            <View style={styles.starsContainer}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <TouchableOpacity key={star} onPress={() => setRating(star)}>
-                  <Text style={[styles.star, star <= rating && styles.starActive]}>★</Text>
-                </TouchableOpacity>
-              ))}
+            <Text style={styles.modalTitle}>개발자 이메일</Text>
+            <Text style={styles.emailDescription}>
+              메일 앱을 실행할 수 없습니다.{"\n"}아래 주소를 복사해서 사용해주세요.
+            </Text>
+            <View style={styles.emailBox}>
+              <Text selectable={true} style={styles.selectableEmail}>
+                sardinespicysalad@gmail.com
+              </Text>
             </View>
-            <TextInput 
-              style={styles.reviewInput} 
-              placeholder="후기를 남겨주세요" 
-              multiline 
-              value={review}
-              onChangeText={setReview}
-            />
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.modalBtnCancel} onPress={() => setShowRatingModal(false)}>
-                <Text style={styles.modalBtnTextCancel}>취소</Text>
+              <TouchableOpacity style={styles.modalBtnCancel} onPress={() => setShowEmailModal(false)}>
+                <Text style={styles.modalBtnTextCancel}>닫기</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalBtnSubmit} onPress={submitRating}>
-                <Text style={styles.modalBtnTextSubmit}>보내기</Text>
+              <TouchableOpacity style={styles.modalBtnSubmit} onPress={() => copyToClipboard('sardinespicysalad@google.com')}>
+                <Text style={styles.modalBtnTextSubmit}>복사하기</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -148,11 +170,9 @@ const styles = StyleSheet.create({
   },
   avatarText: { fontSize: 30 },
   profileInfo: { justifyContent: 'center' },
-  emailText: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 4 },
-  regionText: { fontSize: 14, color: '#666' },
-  regionHighlight: { color: '#2E7D32', fontWeight: 'bold' },
-  loginText: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  
+  featureTitle: { fontSize: 18, fontWeight: 'bold', color: '#191F28', marginBottom: 4 },
+  featureDesc: { fontSize: 13, color: '#8B95A1', lineHeight: 18 },
+
   divider: { height: 8, backgroundColor: '#F2F4F6' },
   
   menuContainer: { paddingVertical: 10, backgroundColor: '#fff', flex: 1 },
@@ -193,6 +213,10 @@ const styles = StyleSheet.create({
   modalBtnSubmit: { flex: 1, padding: 12, alignItems: 'center', marginLeft: 8, borderRadius: 8, backgroundColor: '#ADEBB3' },
   modalBtnTextCancel: { color: '#666' },
   modalBtnTextSubmit: { color: '#191F28', fontWeight: 'bold' },
+
+  emailDescription: { fontSize: 14, color: '#8B95A1', textAlign: 'center', marginBottom: 16, lineHeight: 20 },
+  emailBox: { backgroundColor: '#F2F4F6', padding: 12, borderRadius: 8, width: '100%', marginBottom: 20, alignItems: 'center' },
+  selectableEmail: { fontSize: 15, color: '#191F28', fontWeight: '600' },
 });
 
 export default SettingsContainer;

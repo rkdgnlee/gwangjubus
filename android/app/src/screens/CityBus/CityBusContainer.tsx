@@ -96,6 +96,7 @@ const CityBusContainer = ({ cityName, initialData, activeAlarmId, onToggleAlarm 
           cityName={cityName}
           onBack={popScreen}
           onStopPress={(stop) => pushScreen('stop', stop)}
+          targetNodeId={currentScreen.data.fromNodeId} // ← 추가
         />
       );
     } else {

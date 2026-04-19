@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import { favoriteStorage } from "../utils/favoriteStorage";
 import { IFavoriteBus } from "../types/favorite";
-import { Text, View, StyleSheet, TouchableOpacity, SafeAreaView, Animated, Easing } from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity, SafeAreaView, Animated, Easing, Platform, Vibration } from "react-native";
 import MyContainer from "./My/MyContainer";
 import CityBusContainer from "./CityBus/CityBusContainer";
 import SettingsContainer from "./Settings/SettingsContainer";
-import notifee, { EventType } from '@notifee/react-native';
+import notifee, { AndroidColor, AndroidImportance, EventType } from '@notifee/react-native';
+import { getSpecifyArriveInfoInBusStop } from "../services/Arrive/getSpecifyArriveInfoInBusStop";
 
 interface MainProps {
   cityName: string;
@@ -83,11 +84,167 @@ const TabButton = ({
 
 const MainScreen = ({ cityName, onReset }: MainProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('My');
-  const [favorites, setFavorites] = useState<IFavoriteBus[]>([]);
-  const [cityBusInitData, setCityBusInitData] = useState<{ type: 'bus' | 'stop', data: any } | null>(null);
+  const [, setFavorites] = useState<IFavoriteBus[]>([]);
+  const [, setCityBusInitData] = useState<{ type: 'bus' | 'stop', data: any } | null>(null);
   const [cityBusKey, setCityBusKey] = useState(0); // 시내버스 탭 초기화를 위한 카운터
+  const [activeAlarmId, setActiveAlarmId] = useState<string | null>(null);
+  const [lastPrevCount, setLastPrevCount] = useState<number | null>(null);
+  const monitoringRef = useRef<{ routeid: string; cityCode: number; nodeid: string; nodenm: string; routeno: string } | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastArrtimeRef = useRef<number | null>(null); // ← 추가
+
+  const onToggleAlarm = (item: any, stopInfo: any, cityCode: number) => {
+    const autoStopRef = useRef<NodeJS.Timeout | null>(null);
+
+    if (activeAlarmId === item.routeid) {
+      setActiveAlarmId(null);
+      setLastPrevCount(null);
+      monitoringRef.current = null;
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (autoStopRef.current) clearTimeout(autoStopRef.current);
+      
+      notifee.cancelAllNotifications();
+      notifee.displayNotification({
+        title: '🔕 알림 종료',
+        body: `${item.routeno}번 버스 추적을 종료했어요.`,
+        ...(Platform.OS === 'android'
+          ? { android: { channelId: 'bus-arrival-alert', smallIcon: 'ic_launcher', pressAction: { id: 'default' } } }
+          : { ios: { sound: 'default', foregroundPresentationOptions: { alert: true, sound: false, badge: false } } }
+        ),
+      });
+    } else {
+      setActiveAlarmId(item.routeid);
+      setLastPrevCount(item.arrprevstationcnt ?? null);
+      lastArrtimeRef.current = item.arrtime ?? null; // ← 추가
+      monitoringRef.current = {
+        routeid: item.routeid,
+        routeno: item.routeno,
+        cityCode,
+        nodeid: stopInfo.nodeid,
+        nodenm: stopInfo.nodenm,
+      };
+
+      // 5분 뒤 자동 종료 
+      if (autoStopRef.current) clearTimeout(autoStopRef.current);
+      autoStopRef.current = setTimeout(() => {
+        setActiveAlarmId(null);
+        setLastPrevCount(null);
+        monitoringRef.current = null;
+        lastArrtimeRef.current = null;
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        notifee.cancelAllNotifications();
+        notifee.displayNotification({
+          title: '🔕 알림 자동 종료',
+          body: `${item.routeno}번 버스 알림이 5분이 지나 자동으로 종료됐어요.`,
+          ...(Platform.OS === 'android'
+            ? { android: { channelId: 'bus-arrival-alert', smallIcon: 'ic_launcher', pressAction: { id: 'default' } } }
+            : { ios: { sound: 'default', foregroundPresentationOptions: { alert: true, sound: false, badge: false } } }
+          ),
+        });
+      }, 5 * 60 * 1000); // 5분
+
+
+      notifee.displayNotification({
+        title: `🚌 ${item.routeno}번 버스 추적 시작`,
+        body: '30초마다 위치를 확인할게요. 정거장이 줄어들면 진동으로 알려드려요!',
+        ...(Platform.OS === 'android'
+          ? { android: { channelId: 'bus-arrival-alert', smallIcon: 'ic_launcher', pressAction: { id: 'default' } } }
+          : { ios: { sound: 'default', foregroundPresentationOptions: { alert: true, sound: false, badge: false } } }
+        ),
+      });
+    }
+  };
+  useEffect(() => {
+    if (!activeAlarmId || !monitoringRef.current) return;
+
+    intervalRef.current = setInterval(async () => {
+      const mon = monitoringRef.current;
+      if (!mon) return;
+      try {
+        const result = await getSpecifyArriveInfoInBusStop(mon.cityCode, mon.nodeid, mon.routeid);
+        
+        if (!result || result.length === 0) {
+          // 데이터 없으면 종료
+          setActiveAlarmId(null);
+          monitoringRef.current = null;
+          notifee.displayNotification({
+            title: '🚌 알림 자동 종료',
+            body: `${mon.routeno}번 버스 도착 정보가 없어졌어요.`,
+            ...(Platform.OS === 'android'
+              ? { android: { channelId: 'bus-arrival-alert', smallIcon: 'ic_launcher', pressAction: { id: 'default' } } }
+              : { ios: { sound: 'default', foregroundPresentationOptions: { alert: true, sound: false, badge: false } } }
+            ),
+          });
+          return;
+        }
+
+        const currentStops = result[0].arrprevstationcnt;
+        const currentArrtime = result[0].arrtime ?? 9999;
+
+        // 이전 시간이 100초 이내였는데 시간이 늘어났으면 → 버스 지나친 것
+        if (lastPrevCount !== null && currentArrtime > (lastArrtimeRef.current ?? 9999) && (lastArrtimeRef.current ?? 9999) <= 100) {
+          setActiveAlarmId(null);
+          monitoringRef.current = null;
+          notifee.cancelAllNotifications();
+          notifee.displayNotification({
+            title: '🚌 버스가 지나쳤어요',
+            body: `${mon.routeno}번 버스 알림을 종료할게요.`,
+            ...(Platform.OS === 'android'
+              ? { android: { channelId: 'bus-arrival-alert', smallIcon: 'ic_launcher', pressAction: { id: 'default' } } }
+              : { ios: { sound: 'default', foregroundPresentationOptions: { alert: true, sound: false, badge: false } } }
+            ),
+          });
+          return;
+        }
+
+        // 정거장 줄어들었을 때 알림
+        if (lastPrevCount !== null && currentStops < lastPrevCount) {
+          const title = `🚌 ${mon.routeno}번 버스 접근 중`;
+          const body = `${currentStops}정거장 전이에요. 준비하세요!`;
+          if (Platform.OS === 'android') {
+            await notifee.displayNotification({
+              title, body,
+              android: { channelId: 'bus-arrival-alert', smallIcon: 'ic_launcher', pressAction: { id: 'default' } },
+            });
+          }
+          if (Platform.OS === 'ios') {
+            await notifee.displayNotification({
+              title, body,
+              ios: { sound: 'default', foregroundPresentationOptions: { alert: true, sound: true, badge: false } },
+            });
+          }
+          Vibration.vibrate([0, 500, 100, 500]);
+        }
+
+        setLastPrevCount(currentStops);
+        lastArrtimeRef.current = currentArrtime; // ← 마지막 시간 저장
+
+      } catch (e) {
+        console.error('Monitoring error:', e);
+      }
+    }, 30000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [activeAlarmId, lastPrevCount]);
+  
   useEffect(() => {
     // 포그라운드
+    const setup = async () => {
+      if (Platform.OS === 'ios') await notifee.requestPermission();
+      if (Platform.OS === 'android') {
+        await notifee.createChannel({
+          id: 'bus-arrival-alert',
+          name: '버스 도착 알림',
+          lights: true,
+          lightColor: AndroidColor.GREEN,
+          importance: AndroidImportance.HIGH,
+          vibration: true,
+        });
+      }
+    };
+    setup();
     const unsubscribe = notifee.onForegroundEvent(({ type, detail }) => {
       if (type === EventType.PRESS && detail.notification?.data) {
         const data = detail.notification.data;
@@ -140,6 +297,8 @@ const MainScreen = ({ cityName, onReset }: MainProps) => {
           <CityBusContainer 
             key={`city-bus-${cityBusKey}`} // 키가 바뀌면 화면이 초기화됨
             cityName={cityName} 
+            activeAlarmId={activeAlarmId}    // ← 추가
+            onToggleAlarm={onToggleAlarm}    // ← 추가
           />
         );
       /*
