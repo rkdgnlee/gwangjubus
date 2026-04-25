@@ -11,24 +11,18 @@ import { IBusViaRoute, IBusLocation } from '../../types/bus';
 import SaveModal from '../../components/SaveModal';
 import MenuBottomSheet from '../../components/MenuBottomSheet';
 
-const CITY_CODE_MAP: Record<string, number> = {
-  '광주': 24, '서울': 11, '부산': 26, '대구': 22,
-  '인천': 23, '대전': 25, '울산': 21, '세종': 12, '경기': 31,
-};
-
-
 const DEFAULT_EMOJI = '🔖';
 
 interface BusRouteDetailProps {
   busInfo: any;
   cityName: string;
+  cityCode: number;
   onBack: () => void;
   onStopPress: (stopInfo: any) => void;
   targetNodeId?: string; // ← 추가
 }
 
-const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress, targetNodeId }: BusRouteDetailProps) => {
-  const cityCode = CITY_CODE_MAP[cityName] || 24;
+const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targetNodeId }: BusRouteDetailProps) => {
   const busColor = getBusTypeColor(cityName, busInfo.routetp);
   const { info, stops, locations, loading, error, fetch, refreshLocations } = useBusRouteDetail();
   const { addBus, removeFavorite, isBusSaved, getFavoriteId, load } = useFavorites();
@@ -78,6 +72,7 @@ const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress, targetNodeId }
   };
 
   const locationMap: Record<string, IBusLocation[]> = {};
+  console.log(locations)
   locations.forEach(loc => {
     if (!locationMap[loc.nodeid]) locationMap[loc.nodeid] = [];
     locationMap[loc.nodeid].push(loc);
@@ -174,7 +169,10 @@ const BusRouteDetail = ({ busInfo, cityName, onBack, onStopPress, targetNodeId }
       </View>
     );
   }
-
+  // TODO 부산에서 nodeid가 안나오는 사고 발생. ypeError: Cannot read property 'nodeid' of undefined
+    // at anonymous (&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server&app=com.sardinespicysalad.gwangjubus:101758:27)
+    // at forEach (native)
+    // at BusRouteDetail (&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server&app=com.sardinespicysalad.gwangjubus:101757:22)
   return (
     <View style={styles.container}>
       {/* 헤더 */}

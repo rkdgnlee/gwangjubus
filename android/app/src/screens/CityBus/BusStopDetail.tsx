@@ -20,23 +20,17 @@ const formatArrTime = (seconds: number): string => {
   return `${min}분 ${sec}초`;
 };
 
-const CITY_CODE_MAP: Record<string, number> = {
-  '광주': 24, '서울': 11, '부산': 26, '대구': 22,
-  '인천': 23, '대전': 25, '울산': 21, '세종': 12, '경기': 31,
-};
-
-
 interface BusStopDetailProps {
   stopInfo: any;
   cityName: string;
+  cityCode: number;
   onBack: () => void;
   onBusPress: (busInfo: any) => void;
   activeAlarmId?: string | null;
   onToggleAlarm?: (item: IArriveWithDestination, stopInfo: any, cityCode: number) => void;
 }
 
-const BusStopDetail = ({ stopInfo, cityName, onBack, onBusPress, activeAlarmId, onToggleAlarm }: BusStopDetailProps) => {
-  const cityCode = CITY_CODE_MAP[cityName] || 24;
+const BusStopDetail = ({ stopInfo, cityName, cityCode, onBack, onBusPress, activeAlarmId, onToggleAlarm }: BusStopDetailProps) => {
   const { locations, loading, error, search, reset } = useArriveInfoInBusStop();
   const { addStop, removeFavorite, isStopSaved, getFavoriteId, load } = useFavorites();
 

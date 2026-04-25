@@ -30,9 +30,9 @@ const BusResultList = ({ data, mode, cityName, onPressItem }: BusResultListProps
                    <Text style={styles.routeNo}>{route.routeno}</Text>  🚩 {route.startnodenm} → 🏁 {route.endnodenm}
                 </Text>
               ))}
-              {stopItem.routes.length > 3 && (
+              {/* {stopItem.routes.length > 3 && (
                 <Text style={styles.moreRoutes}>+{stopItem.routes.length - 3}개 노선 더 있음</Text>
-              )}
+              )} */}
             </View>
           </View>
         </TouchableOpacity>
@@ -48,17 +48,42 @@ const BusResultList = ({ data, mode, cityName, onPressItem }: BusResultListProps
         onPress={() => onPressItem(item)}
       >
         <View style={styles.leftSection}>
-          <View style={[styles.busIcon, { backgroundColor: typeColor }]}>
+          {/* <View style={[styles.busIcon, { backgroundColor: typeColor }]}>
             <Text style={styles.busIconText}>B</Text>
-          </View>
-          <View>
-            <Text style={[styles.busName, { color: typeColor }]}>{busItem.routeno}</Text>
-            <Text style={[styles.busType, { color: typeColor }]}>{busItem.routetp}</Text>
+          </View> */}
+          
+          {/* 추가: flex: 1을 주어 아이콘 영역 외의 남은 공간만 차지하도록 제한 */}
+          <View style={{ flex: 1 }}>
+            <Text 
+              style={[styles.busName, { color: typeColor }]} 
+              numberOfLines={1} 
+              ellipsizeMode="tail"
+            >
+              {busItem.routeno}
+            </Text>
+            <Text 
+              style={[styles.busType, { color: typeColor }]} 
+              numberOfLines={1} 
+              ellipsizeMode="tail"
+            >
+              {busItem.routetp}
+            </Text>
           </View>
         </View>
+
         <View style={styles.rightSection}>
-          <Text style={styles.directionLabel}>🏁 {busItem.endnodenm}</Text>
-          <Text style={styles.directionText}>막차 {String(busItem.endvehicletime).slice(0, 2)}시 {String(busItem.endvehicletime).slice(2, 4)}분</Text>
+          <Text 
+            style={styles.directionLabel} 
+            numberOfLines={1} 
+            ellipsizeMode="tail"
+          >
+            🏁 {busItem.endnodenm}
+          </Text>
+          <Text style={styles.directionText} numberOfLines={1}>
+            {busItem.endvehicletime 
+              ? `막차 ${String(busItem.endvehicletime).slice(0, 2)}시 ${String(busItem.endvehicletime).slice(2, 4)}분` 
+              : '-'}
+          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -95,12 +120,20 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
   },
-  leftSection: { flexDirection: 'row', alignItems: 'center' },
+  leftSection: { 
+    flexDirection: 'row', 
+    alignItems: 'center',
+    width: '48%', // 👈 추가된 부분
+  },
   busIcon: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginRight: 12, opacity: 0.9 },
   busIconText: { fontSize: 20, fontWeight: 'bold' },
   busName: { fontSize: 18, fontWeight: 'bold' },
   busType: { fontSize: 13, fontWeight: '600', marginTop: 2 },
-  rightSection: { alignItems: 'flex-end', gap: 8 },
+  rightSection: { 
+    alignItems: 'flex-end', 
+    gap: 8,
+    width: '48%', // 👈 추가된 부분
+  },
   directionLabel: { fontSize: 15, color: '#333', fontWeight: '500' },
   directionText: { fontSize: 12, color: '#aaa', marginBottom: 2 },
   stopName: { fontSize: 17, fontWeight: 'bold', color: '#191F28' },

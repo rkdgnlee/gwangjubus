@@ -25,8 +25,8 @@ const SettingsContainer = ({ cityName, onChangeRegion }: SettingsProps) => {
       {
         text: "변경",
         onPress: async () => {
-          // 저장된 도시 정보를 지우고 앱의 상태를 초기화
-          await storage.setCity(''); 
+          // 저장된 도시 정보(이름, 코드)를 모두 지우고 초기화
+          await storage.clear(); 
           onChangeRegion();
         }
       }

@@ -8,26 +8,19 @@ import { useBusRouteNoList } from '../../hooks/BusRoute/useBusRouteNoList';
 import { useBusStopNoList } from '../../hooks/BusStop/useBusStopNoList';
 import { useSearchHistory } from '../../hooks/search/useSearchHistory';
 
-const CITY_CODE_MAP: Record<string, number> = {
-  '광주': 24, '서울': 11, '부산': 26, '대구': 22,
-  '인천': 23, '대전': 25, '울산': 21, '세종': 12, '경기': 31,
-};
-
 interface Props {
   cityName: string;
+  cityCode: number;
   initialData?: { type: 'bus' | 'stop', data: any } | null;
   activeAlarmId?: string | null;
   onToggleAlarm?: (item: any, stopInfo: any, cityCode: number) => void;
 }
 
-const CityBusContainer = ({ cityName, initialData, activeAlarmId, onToggleAlarm }: Props) => {
+const CityBusContainer = ({ cityName, cityCode,initialData, activeAlarmId, onToggleAlarm }: Props) => {
   const [searchMode, setSearchMode] = useState<'bus' | 'stop'>('bus');
   const [searchText, setSearchText] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
   const [navStack, setNavStack] = useState<any[]>([]);
-
-  const cityCode = CITY_CODE_MAP[cityName] || 24;
-
   const { routes, loading: busLoading, search: searchBus, reset: resetBus } = useBusRouteNoList();
   const { stops, loading: stopLoading, search: searchStop, reset: resetStop } = useBusStopNoList();
 
@@ -94,6 +87,7 @@ const CityBusContainer = ({ cityName, initialData, activeAlarmId, onToggleAlarm 
         <BusRouteDetail
           busInfo={currentScreen.data}
           cityName={cityName}
+          cityCode={cityCode}
           onBack={popScreen}
           onStopPress={(stop) => pushScreen('stop', stop)}
           targetNodeId={currentScreen.data.fromNodeId} // ← 추가
@@ -104,6 +98,7 @@ const CityBusContainer = ({ cityName, initialData, activeAlarmId, onToggleAlarm 
         <BusStopDetail
           stopInfo={currentScreen.data}
           cityName={cityName}
+          cityCode={cityCode}
           onBack={popScreen}
           onBusPress={(bus) => pushScreen('bus', bus)}
           activeAlarmId={activeAlarmId}

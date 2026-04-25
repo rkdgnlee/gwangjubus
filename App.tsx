@@ -7,6 +7,7 @@ import RegionSelectScreen from './android/app/src/screens/region/RegionSelectScr
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [savedCity, setSavedCity] = useState<string | null>(null);
+  const [savedCityCode, setSavedCityCode] = useState<number | null>(null);
 
   useEffect(() => {
     checkStorage();
@@ -14,9 +15,11 @@ const App = () => {
 
   const checkStorage = async () => {
     const city = await storage.getCity();
+    const cityCode = await storage.getCityCode();
     setSavedCity(city);
+    setSavedCityCode(Number(cityCode));
+    console.log(city);
     setIsLoading(false); // 로딩 끝
-    
   };
 
   // 로딩 중일 때 (데이터 읽는 찰나의 순간)
@@ -29,8 +32,8 @@ const App = () => {
   }
 
   // 데이터가 있으면 메인, 없으면 지역 선택 화면
-  return savedCity ? (
-    <MainScreen cityName={savedCity} onReset={() => setSavedCity(null)} />
+  return (savedCity && savedCityCode) ? (
+    <MainScreen cityName={savedCity} cityCode={savedCityCode} onReset={() => setSavedCity(null)} />
   ) : (
     <RegionSelectScreen onComplete={checkStorage} /> 
     // 저장 후 checkStorage를 다시 호출하게 하여 화면을 전환함

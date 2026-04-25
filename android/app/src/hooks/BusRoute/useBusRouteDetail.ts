@@ -33,6 +33,7 @@ export const useBusRouteDetail = () => {
 
       // 3. 실시간 버스 위치
       const locations = await getBusLocation(cityCode, routeId);
+      console.log(routeId, cityCode)
       console.log(info)
       setState({ info, stops, locations });
     } catch (err) {

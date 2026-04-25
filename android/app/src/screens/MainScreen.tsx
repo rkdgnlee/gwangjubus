@@ -10,6 +10,7 @@ import { getSpecifyArriveInfoInBusStop } from "../services/Arrive/getSpecifyArri
 
 interface MainProps {
   cityName: string;
+  cityCode: number;
   onReset: () => void;
 }
 
@@ -82,7 +83,7 @@ const TabButton = ({
   );
 };
 
-const MainScreen = ({ cityName, onReset }: MainProps) => {
+const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('My');
   const [, setFavorites] = useState<IFavoriteBus[]>([]);
   const [, setCityBusInitData] = useState<{ type: 'bus' | 'stop', data: any } | null>(null);
@@ -297,6 +298,7 @@ const MainScreen = ({ cityName, onReset }: MainProps) => {
           <CityBusContainer 
             key={`city-bus-${cityBusKey}`} // 키가 바뀌면 화면이 초기화됨
             cityName={cityName} 
+            cityCode={cityCode}
             activeAlarmId={activeAlarmId}    // ← 추가
             onToggleAlarm={onToggleAlarm}    // ← 추가
           />
