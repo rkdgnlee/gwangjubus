@@ -1,11 +1,11 @@
 buildscript {
     ext {
-        buildToolsVersion = "36.0.0"
-        minSdkVersion = 24
-        compileSdkVersion = 36
-        targetSdkVersion = 36
-        ndkVersion = "27.1.12297006"
-        kotlinVersion = "2.1.20"
+        buildToolsVersion = "34.0.0"  // 36 -> 34 또는 35로 하향
+        minSdkVersion = 30
+        compileSdkVersion = 35      // 36 -> 34 또는 35
+        targetSdkVersion = 35       // 36 -> 34 또는 35
+        ndkVersion = "27.0.12077973" // NDK도 조금 더 안정적인 버전 권장
+        kotlinVersion = "1.8.22"
     }
     repositories {
         google()
