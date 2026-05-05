@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { getBusTypeColor } from '../../constants/busColors';
 import { IBusRoute } from '../../types/bus';
 import { IStopWithRoutes } from '../../hooks/BusStop/useBusStopNoList';
+import { COLORS } from '../../constants/theme';
 
 interface BusResultListProps {
   data: IBusRoute[] | IStopWithRoutes[];
@@ -107,7 +108,7 @@ const BusResultList = ({ data, mode, cityName, onPressItem }: BusResultListProps
 const styles = StyleSheet.create({
   listContent: { padding: 20 },
   itemContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.text.white,
     padding: 16,
     borderRadius: 16,
     marginBottom: 12,
@@ -134,16 +135,16 @@ const styles = StyleSheet.create({
     gap: 8,
     width: '48%', // 👈 추가된 부분
   },
-  directionLabel: { fontSize: 15, color: '#333', fontWeight: '500' },
-  directionText: { fontSize: 12, color: '#aaa', marginBottom: 2 },
-  stopName: { fontSize: 17, fontWeight: 'bold', color: '#191F28' },
-  stopNo: { fontSize: 13, color: '#8B95A1', marginTop: 2 },
+  directionLabel: { fontSize: 15, color: COLORS.text.main, fontWeight: '500' },
+  directionText: { fontSize: 12, color: COLORS.text.hint, marginBottom: 2 },
+  stopName: { fontSize: 17, fontWeight: 'bold', color: COLORS.text.main },
+  stopNo: { fontSize: 13, color: COLORS.text.hint, marginTop: 2 },
   routeList: { marginTop: 8, gap: 4 },
-  routeText: { fontSize: 12, color: '#555' },
-  routeNo: { color: '#191F28' },
-  moreRoutes: { fontSize: 12, color: '#ADEBB3', fontWeight: '600', marginTop: 2 },
+  routeText: { fontSize: 12, color: COLORS.text.sub },
+  routeNo: { color: COLORS.text.main },
+  moreRoutes: { fontSize: 12, color: COLORS.primary, fontWeight: '600', marginTop: 2 },
   emptyContainer: { alignItems: 'center', marginTop: 50 },
-  emptyText: { color: '#aaa', fontSize: 16 },
+  emptyText: { color: COLORS.text.muted, fontSize: 16 },
 });
 
 export default BusResultList;

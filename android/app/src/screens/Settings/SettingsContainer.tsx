@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal, TextInput, ScrollView, Linking, Clipboard, Platform } from 'react-native';
 import { storage } from '../../utils/storage';
 import HistoryManageScreen from '../My/HistoryManageScreen';
+import { COLORS } from '../../constants/theme';
 
 interface SettingsProps {
   cityName: string;
@@ -101,7 +102,7 @@ const SettingsContainer = ({ cityName, onChangeRegion }: SettingsProps) => {
         />
         <SettingsItem 
           title="출처 및 오픈소스 라이선스" 
-          onPress={() => Alert.alert("오픈소스 라이선스", "공공데이터포털API활용(국토교통부)")} 
+          onPress={() => Alert.alert("오픈소스 라이선스", "출처: 공공데이터포털")} 
           icon="📄" 
         />
         
@@ -152,7 +153,7 @@ const SettingsItem = ({ title, onPress, icon }: { title: string, onPress: () => 
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5FBF6' },
+  container: { flex: 1, backgroundColor: COLORS.background },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -160,22 +161,22 @@ const styles = StyleSheet.create({
     paddingEnd: 24,
     paddingTop: 64,
     paddingBottom: 24,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.text.white,
   },
   avatar: {
     width: 60, height: 60, borderRadius: 30,
-    backgroundColor: '#EEF6F0',
+    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center', alignItems: 'center',
     marginRight: 16,
   },
   avatarText: { fontSize: 30 },
   profileInfo: { justifyContent: 'center' },
-  featureTitle: { fontSize: 18, fontWeight: 'bold', color: '#191F28', marginBottom: 4 },
-  featureDesc: { fontSize: 13, color: '#8B95A1', lineHeight: 18 },
+  featureTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 4 },
+  featureDesc: { fontSize: 13, color: COLORS.text.hint, lineHeight: 18 },
 
-  divider: { height: 8, backgroundColor: '#F2F4F6' },
+  divider: { height: 8, backgroundColor: COLORS.border },
   
-  menuContainer: { paddingVertical: 10, backgroundColor: '#fff', flex: 1 },
+  menuContainer: { paddingVertical: 10, backgroundColor: COLORS.text.white, flex: 1 },
   itemContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -183,12 +184,12 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 24,
     borderBottomWidth: 1,
-    borderBottomColor: '#F2F4F6',
+    borderBottomColor: COLORS.border,
   },
   itemLeft: { flexDirection: 'row', alignItems: 'center' },
   itemIcon: { fontSize: 20, marginRight: 12 },
-  itemTitle: { fontSize: 16, color: '#333' },
-  itemArrow: { fontSize: 20, color: '#ccc' },
+  itemTitle: { fontSize: 16, color: COLORS.text.main },
+  itemArrow: { fontSize: 20, color: COLORS.text.muted },
 
   versionContainer: {
     flexDirection: 'row',
@@ -197,26 +198,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     marginTop: 10,
   },
-  versionTitle: { fontSize: 14, color: '#888' },
-  versionText: { fontSize: 14, color: '#888' },
+  versionTitle: { fontSize: 14, color: COLORS.text.sub },
+  versionText: { fontSize: 14, color: COLORS.text.sub },
 
   // 모달 스타일
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { width: '80%', backgroundColor: '#fff', borderRadius: 16, padding: 24, alignItems: 'center' },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 20, color: '#333' },
+  modalContent: { width: '80%', backgroundColor: COLORS.text.white, borderRadius: 16, padding: 24, alignItems: 'center' },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 20, color: COLORS.text.main },
   starsContainer: { flexDirection: 'row', marginBottom: 20 },
-  star: { fontSize: 32, color: '#ddd', marginHorizontal: 4 },
+  star: { fontSize: 32, color: COLORS.text.muted, marginHorizontal: 4 },
   starActive: { color: '#FFD700' },
   reviewInput: { width: '100%', height: 80, borderColor: '#eee', borderWidth: 1, borderRadius: 8, padding: 10, marginBottom: 20, textAlignVertical: 'top' },
   modalButtons: { flexDirection: 'row', width: '100%' },
-  modalBtnCancel: { flex: 1, padding: 12, alignItems: 'center', marginRight: 8, borderRadius: 8, backgroundColor: '#f0f0f0' },
-  modalBtnSubmit: { flex: 1, padding: 12, alignItems: 'center', marginLeft: 8, borderRadius: 8, backgroundColor: '#ADEBB3' },
-  modalBtnTextCancel: { color: '#666' },
-  modalBtnTextSubmit: { color: '#191F28', fontWeight: 'bold' },
+  modalBtnCancel: { flex: 1, padding: 12, alignItems: 'center', marginRight: 8, borderRadius: 8, backgroundColor: COLORS.border },
+  modalBtnSubmit: { flex: 1, padding: 12, alignItems: 'center', marginLeft: 8, borderRadius: 8, backgroundColor: COLORS.primary },
+  modalBtnTextCancel: { color: COLORS.text.sub },
+  modalBtnTextSubmit: { color: COLORS.text.white, fontWeight: 'bold' },
 
-  emailDescription: { fontSize: 14, color: '#8B95A1', textAlign: 'center', marginBottom: 16, lineHeight: 20 },
-  emailBox: { backgroundColor: '#F2F4F6', padding: 12, borderRadius: 8, width: '100%', marginBottom: 20, alignItems: 'center' },
-  selectableEmail: { fontSize: 15, color: '#191F28', fontWeight: '600' },
+  emailDescription: { fontSize: 14, color: COLORS.text.hint, textAlign: 'center', marginBottom: 16, lineHeight: 20 },
+  emailBox: { backgroundColor: COLORS.border, padding: 12, borderRadius: 8, width: '100%', marginBottom: 20, alignItems: 'center' },
+  selectableEmail: { fontSize: 15, color: COLORS.text.main, fontWeight: '600' },
 });
 
 export default SettingsContainer;

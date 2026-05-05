@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { busHistoryStorage } from '../../utils/busHistoryStorage';
 import { IBusRideHistory } from '../../types/IBusRideHistory';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { COLORS } from '../../constants/theme';
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#191F28',
+    color: COLORS.text.main,
     marginBottom: 15,
   },
   emptyContainer: {
@@ -136,15 +137,15 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   emptyEmoji: { fontSize: 48, marginBottom: 16 },
-  emptyText: { fontSize: 16, fontWeight: '600', color: '#4E5968', marginBottom: 8 },
-  emptySubText: { fontSize: 13, color: '#8B95A1', textAlign: 'center', lineHeight: 20 },
+  emptyText: { fontSize: 16, fontWeight: '600', color: COLORS.text.sub, marginBottom: 8 },
+  emptySubText: { fontSize: 13, color: COLORS.text.hint, textAlign: 'center', lineHeight: 20 },
 
   listContent: { paddingBottom: 20 },
   itemRow: { flexDirection: 'row', marginBottom: 16, alignItems: 'flex-start' },
 
   timeContainer: { width: 72, alignItems: 'flex-end', paddingTop: 4 },
-  dateText: { fontSize: 12, color: '#8B95A1', marginBottom: 2 },
-  timeText: { fontSize: 13, fontWeight: '600', color: '#333' },
+  dateText: { fontSize: 12, color: COLORS.text.hint, marginBottom: 2 },
+  timeText: { fontSize: 13, fontWeight: '600', color: COLORS.text.main },
 
   timelineLine: {
     width: 20,
@@ -156,29 +157,29 @@ const styles = StyleSheet.create({
     top: -16,
     width: 2,
     height: 16,
-    backgroundColor: '#E5E8EB',
+    backgroundColor: COLORS.border,
   },
   lineBottom: {
     position: 'absolute',
     top: 10,
     width: 2,
     height: 60,
-    backgroundColor: '#E5E8EB',
+    backgroundColor: COLORS.border,
   },
   dot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#31D698',
+    backgroundColor: COLORS.primary,
     marginTop: 6,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: COLORS.text.white,
     zIndex: 1,
   },
 
   infoCard: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.text.white,
     borderRadius: 16,
     padding: 14,
     elevation: 1,
@@ -187,29 +188,29 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
   },
-  busNo: { fontSize: 16, fontWeight: 'bold', color: '#191F28', marginBottom: 4 },
-  stopName: { fontSize: 14, color: '#4E5968', marginBottom: 2 },
-  cityName: { fontSize: 12, color: '#8B95A1' },
+  busNo: { fontSize: 16, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 4 },
+  stopName: { fontSize: 14, color: COLORS.text.sub, marginBottom: 2 },
+  cityName: { fontSize: 12, color: COLORS.text.hint },
 
   noticeBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF9E6',
+    backgroundColor: COLORS.primaryLight,
     borderRadius: 12,
     padding: 12,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#FFE082',
+    borderColor: COLORS.primary,
   },
   noticeEmoji: { fontSize: 18, marginRight: 8 },
   noticeText: {
     flex: 1,
     fontSize: 12,
-    color: '#7A6000',
+    color: COLORS.primaryDark,
     lineHeight: 18,
   },
   noticeClose: { padding: 4, marginLeft: 8 },
-  noticeCloseText: { fontSize: 14, color: '#B0A060' },
+  noticeCloseText: { fontSize: 14, color: COLORS.text.hint },
 
 });
 

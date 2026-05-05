@@ -5,6 +5,7 @@ import { View, StyleSheet } from 'react-native';
 // '../' 대신 './' 를 사용해야 합니다.
 import FavoriteSection from './FavoriteSection'; 
 import ScheduleSection from './ScheduleSection';
+import { COLORS } from '../../constants/theme';
 
 interface Props {
   onNavigate: (type: 'bus' | 'stop', data: any) => void;
@@ -28,7 +29,7 @@ const MyContainer = ({ onNavigate }: Props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F4F6',
+    backgroundColor: COLORS.background,
   },
   topSection: { flex: 0.55 },
   bottomSection: { flex: 0.45 },

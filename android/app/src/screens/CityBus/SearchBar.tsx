@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { COLORS } from '../../constants/theme';
 
 interface SearchBarProps {
   value: string;
@@ -34,21 +35,21 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.text.white,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF6F0', // 아주 연한 민트 그레이
+    backgroundColor: COLORS.primaryLight, // 연한 블루 배경
     borderRadius: 12,
     paddingHorizontal: 15,
     paddingRight: 8, // 버튼과의 간격을 위해 오른쪽 패딩 조정
     height: 50,
   },
   searchIcon: { fontSize: 18, marginRight: 10 },
-  input: { flex: 1, fontSize: 16, color: '#333', height: '100%' },
+  input: { flex: 1, fontSize: 16, color: COLORS.text.main, height: '100%' },
   searchButton: {
-    backgroundColor: '#ADEBB3', // 메인 테마 색상
+    backgroundColor: COLORS.primary, // 메인 다저 블루
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
   searchButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#191F28',
+    color: COLORS.text.white,
   },
 });
 

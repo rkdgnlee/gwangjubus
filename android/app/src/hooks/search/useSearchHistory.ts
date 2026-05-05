@@ -23,10 +23,11 @@ export const useSearchHistory = (mode: 'bus' | 'stop') => {
       const raw = await AsyncStorage.getItem(KEYS[mode]);
       if (!raw) return;
       const parsed: ISearchHistory[] = JSON.parse(raw);
+      if (!Array.isArray(parsed)) throw new Error('Invalid data format');
+
       const now = Date.now();
       const filtered = parsed.filter(h => now - h.timestamp < SIX_MONTHS_MS);
       setHistory(filtered);
-      // 만료된 것 있으면 다시 저장
       if (filtered.length !== parsed.length) {
         await AsyncStorage.setItem(KEYS[mode], JSON.stringify(filtered));
       }

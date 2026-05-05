@@ -4,6 +4,7 @@ import {
   TextInput, KeyboardAvoidingView, Platform, Pressable
 } from 'react-native';
 import EmojiPicker from './EmojiPicker';
+import { COLORS } from '../constants/theme';
 
 interface SaveModalProps {
   visible: boolean;
@@ -59,7 +60,7 @@ const SaveModal = ({ visible, title, subtitle, onClose, onSave }: SaveModalProps
             value={memo}
             onChangeText={setMemo}
             placeholder="예: 출근길, 버스 놓쳤을 때..."
-            placeholderTextColor="#C0C8D0"
+            placeholderTextColor={COLORS.text.muted}
             maxLength={20}
           />
 
@@ -83,15 +84,15 @@ const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end' },
   overlayBg: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)' },
   sheet: {
-    backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: COLORS.text.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 24, paddingBottom: 40,
   },
-  sheetTitle: { fontSize: 20, fontWeight: 'bold', color: '#191F28', marginBottom: 20 },
+  sheetTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 20 },
 
   emojiInfoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
   emojiCircleWrapper: {
     width: 64, height: 64, borderRadius: 32,
-    backgroundColor: '#F5FBF6',
+    backgroundColor: COLORS.background,
     justifyContent: 'center', alignItems: 'center',
     marginRight: 16, position: 'relative',
   },
@@ -99,19 +100,19 @@ const styles = StyleSheet.create({
   editDot: {
     position: 'absolute', bottom: 2, right: 2,
     width: 16, height: 16, borderRadius: 8,
-    backgroundColor: '#ADEBB3', borderWidth: 2, borderColor: '#fff',
+    backgroundColor: COLORS.primary, borderWidth: 2, borderColor: COLORS.text.white,
   },
   infoTextWrapper: { flex: 1, justifyContent: 'center' },
-  infoTitle: { fontSize: 17, fontWeight: 'bold', color: '#191F28' },
-  infoSub: { fontSize: 13, color: '#8B95A1', marginTop: 4 },
+  infoTitle: { fontSize: 17, fontWeight: 'bold', color: COLORS.text.main },
+  infoSub: { fontSize: 13, color: COLORS.text.hint, marginTop: 4 },
 
-  inputLabel: { fontSize: 14, fontWeight: '600', color: '#4E5968', marginBottom: 8 },
+  inputLabel: { fontSize: 14, fontWeight: '600', color: COLORS.text.sub, marginBottom: 8 },
   memoInput: {
-    backgroundColor: '#F5FBF6', borderRadius: 12,
-    padding: 14, fontSize: 16, color: '#191F28', marginBottom: 24,
+    backgroundColor: COLORS.background, borderRadius: 12,
+    padding: 14, fontSize: 16, color: COLORS.text.main, marginBottom: 24,
   },
-  saveButton: { backgroundColor: '#ADEBB3', borderRadius: 14, padding: 16, alignItems: 'center' },
-  saveButtonText: { fontSize: 17, fontWeight: 'bold', color: '#191F28' },
+  saveButton: { backgroundColor: COLORS.primary, borderRadius: 14, padding: 16, alignItems: 'center' },
+  saveButtonText: { fontSize: 17, fontWeight: 'bold', color: COLORS.text.white },
 });
 
 export default SaveModal;

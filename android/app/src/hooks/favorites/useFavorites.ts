@@ -10,7 +10,14 @@ export const useFavorites = () => {
   const load = useCallback(async () => {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
-      if (raw) setFavorites(JSON.parse(raw));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setFavorites(parsed);
+        } else {
+          setFavorites([]);
+        }
+      }
     } catch (e) {
       console.error('load favorites error:', e);
     }
@@ -19,8 +26,12 @@ export const useFavorites = () => {
   useEffect(() => { load(); }, []);
 
   const save = async (next: IFavorite[]) => {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    setFavorites(next);
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      setFavorites(next);
+    } catch (e) {
+      console.error('save favorites error:', e);
+    }
   };
 
   const addStop = useCallback(async (

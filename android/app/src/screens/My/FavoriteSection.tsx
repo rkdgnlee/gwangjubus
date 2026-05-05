@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { IFavorite, IFavoriteStop, IFavoriteBus } from '../../types/favorite';
 import { useFavorites } from '../../hooks/favorites/useFavorites';
+import { COLORS } from '../../constants/theme';
 
 interface Props {
   onNavigate: (type: 'bus' | 'stop', data: any) => void;
@@ -75,27 +76,27 @@ const FavoriteSection = ({ onNavigate }: Props) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
-  headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#191F28', marginBottom: 15, marginTop: 24 },
+  headerTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 15, marginTop: 24 },
   listContent: { paddingBottom: 10 },
   row: { justifyContent: 'space-between', marginBottom: 12 },
   card: {
-    backgroundColor: '#fff', borderRadius: 16, padding: 14, width: '48%',
+    backgroundColor: COLORS.text.white, borderRadius: 16, padding: 14, width: '48%',
     aspectRatio: 4 / 3,
     elevation: 1, shadowColor: '#000', shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 }, shadowRadius: 8,
   },
   cardHeader: { marginBottom: 6 },
   emoji: { fontSize: 24, marginBottom: 2 },
-  userTitle: { fontSize: 13, fontWeight: '700', color: '#333' },
+  userTitle: { fontSize: 13, fontWeight: '700', color: COLORS.text.main },
   infoContainer: { marginTop: 'auto' },
-  typeBadge: { backgroundColor: '#EEF6F0', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, alignSelf: 'flex-start', marginBottom: 4 },
-  typeBadgeText: { fontSize: 11, color: '#2E7D32', fontWeight: '600' },
-  mainName: { fontSize: 16, fontWeight: '700', color: '#191F28', marginBottom: 2 },
-  subName: { fontSize: 12, color: '#8B95A1' },
+  typeBadge: { backgroundColor: COLORS.primaryLight, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, alignSelf: 'flex-start', marginBottom: 4 },
+  typeBadgeText: { fontSize: 11, color: COLORS.primaryDark, fontWeight: '600' },
+  mainName: { fontSize: 16, fontWeight: '700', color: COLORS.text.main, marginBottom: 2 },
+  subName: { fontSize: 12, color: COLORS.text.hint },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: 'bold', color: '#191F28', marginBottom: 8 },
-  emptyDesc: { fontSize: 14, color: '#8B95A1' },
+  emptyTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 8 },
+  emptyDesc: { fontSize: 14, color: COLORS.text.hint },
 });
 
 export default FavoriteSection;

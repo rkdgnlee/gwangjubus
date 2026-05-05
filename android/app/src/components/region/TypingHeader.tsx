@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Text, StyleSheet, View } from 'react-native';
+import { COLORS } from '../../constants/theme';
 
 const TITLE = "이용할 도시를 선택해주세요 🏙️";
 const SUBTITLE = "설정에서 언제든지 변경할 수 있습니다";
@@ -49,13 +50,13 @@ const styles = StyleSheet.create({
   title: { 
     fontSize: 24, 
     fontWeight: '800', 
-    color: '#000', 
+    color: COLORS.text.main, 
     marginBottom: 8 
   },
   subtitle: { 
     fontSize: 15, 
     fontWeight: '500', 
-    color: '#a4a4a4' 
+    color: COLORS.text.hint 
   }
 });
 

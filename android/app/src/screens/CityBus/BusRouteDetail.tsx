@@ -10,6 +10,7 @@ import { useFavorites } from '../../hooks/favorites/useFavorites';
 import { IBusViaRoute, IBusLocation } from '../../types/bus';
 import SaveModal from '../../components/SaveModal';
 import MenuBottomSheet from '../../components/MenuBottomSheet';
+import { COLORS } from '../../constants/theme';
 
 const DEFAULT_EMOJI = '🔖';
 
@@ -156,8 +157,8 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#ADEBB3" />
-        <Text style={{ marginTop: 10, color: '#888' }}>노선 정보를 불러오고 있어요...</Text>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={{ marginTop: 10, color: COLORS.text.sub }}>노선 정보를 불러오고 있어요...</Text>
       </View>
     );
   }
@@ -165,7 +166,7 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
   if (error) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={{ color: '#aaa' }}>{error}</Text>
+        <Text style={{ color: COLORS.text.muted }}>{error}</Text>
       </View>
     );
   }
@@ -245,26 +246,26 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5FBF6' },
+  container: { flex: 1, backgroundColor: COLORS.background },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    backgroundColor: '#fff',
+    borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.text.white,
   },
   backButton: { marginRight: 15, padding: 5 },
-  backText: { fontSize: 24, color: '#333' },
+  backText: { fontSize: 24, color: COLORS.text.main },
   headerBusTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
   headerBusName: { fontSize: 24, fontWeight: 'bold' },
   routeTypeBadge: { marginLeft: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   routeTypeSmall: { fontSize: 14, fontWeight: '700' },
-  headerDirection: { fontSize: 15, color: '#555', marginTop: 2 },
-  headerInterval: { fontSize: 13, color: '#ADEBB3', marginTop: 4, fontWeight: '600' },
+  headerDirection: { fontSize: 15, color: COLORS.text.sub, marginTop: 2 },
+  headerInterval: { fontSize: 13, color: COLORS.primary, marginTop: 4, fontWeight: '600' },
   menuButton: { padding: 8, marginLeft: 8 },
-  menuText: { fontSize: 20, color: '#333', fontWeight: 'bold', letterSpacing: 2 },
+  menuText: { fontSize: 20, color: COLORS.text.main, fontWeight: 'bold', letterSpacing: 2 },
 
   listContent: { paddingVertical: 20, paddingHorizontal: 20 },
   itemContainer: { flexDirection: 'column' },
@@ -272,13 +273,13 @@ const styles = StyleSheet.create({
   stationRow: { flexDirection: 'row', height: 56 },
 
   timelineSection: { width: 40, alignItems: 'center' },
-  line: { width: 2, backgroundColor: '#ddd', position: 'absolute', left: 19 },
+  line: { width: 2, backgroundColor: COLORS.border, position: 'absolute', left: 19 },
   lineTop: { top: 0, bottom: '50%' },
   lineBottom: { top: '50%', bottom: 0 },
 
   nodeCircle: {
     width: 14, height: 14, borderRadius: 7,
-    backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 2,
+    backgroundColor: COLORS.text.white, borderColor: COLORS.text.muted, borderWidth: 2,
     zIndex: 1, position: 'absolute', top: '50%', marginTop: -7,
     justifyContent: 'center', alignItems: 'center',
   },
@@ -288,7 +289,7 @@ const styles = StyleSheet.create({
   busIconWrapper: {
     width: 34, height: 34, borderRadius: 17,
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: '#fff',
+    borderWidth: 2, borderColor: COLORS.text.white,
     zIndex: 2, position: 'absolute', top: '50%', marginTop: -17,
     elevation: 3,
   },
@@ -297,69 +298,69 @@ const styles = StyleSheet.create({
   busInfoSection: { flex: 1, paddingLeft: 10, justifyContent: 'center' },
   busInfoCard: {
     paddingVertical: 6, paddingHorizontal: 10,
-    backgroundColor: '#fff', borderRadius: 8,
+    backgroundColor: COLORS.text.white, borderRadius: 8,
     alignSelf: 'flex-start',
-    borderWidth: 1, borderColor: '#E0EAE2',
+    borderWidth: 1, borderColor: COLORS.border,
   },
-  plateNo: { fontSize: 15, fontWeight: 'bold', color: '#333' },
+  plateNo: { fontSize: 15, fontWeight: 'bold', color: COLORS.text.main },
 
   stationInfoSection: {
     flex: 1, paddingLeft: 10,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   textColumn: { flex: 1, justifyContent: 'center' },
-  stopName: { fontSize: 18, color: '#333' },
-  stopNameEnd: { fontWeight: 'bold', color: '#191F28', fontSize: 19 },
-  nodeNo: { fontSize: 13, color: '#aaa', marginTop: 2 },
-  chevron: { fontSize: 24, color: '#B0B8C1' },
+  stopName: { fontSize: 18, color: COLORS.text.main },
+  stopNameEnd: { fontWeight: 'bold', color: COLORS.text.main, fontSize: 19 },
+  nodeNo: { fontSize: 13, color: COLORS.text.hint, marginTop: 2 },
+  chevron: { fontSize: 24, color: COLORS.text.muted },
 
   dividerContainer: {
     flexDirection: 'row', alignItems: 'center',
     marginVertical: 16, paddingHorizontal: 4,
   },
-  dividerLine: { flex: 1, height: 1, backgroundColor: '#ADEBB3' },
+  dividerLine: { flex: 1, height: 1, backgroundColor: COLORS.primary },
   dividerBadge: {
-    backgroundColor: '#ADEBB3', paddingHorizontal: 12,
+    backgroundColor: COLORS.primary, paddingHorizontal: 12,
     paddingVertical: 6, borderRadius: 20, marginHorizontal: 8,
   },
-  dividerText: { fontSize: 13, color: '#191F28', fontWeight: 'bold' },
+  dividerText: { fontSize: 13, color: COLORS.text.white, fontWeight: 'bold' },
 
   overlay: { flex: 1, justifyContent: 'flex-end' },
   overlayBg: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },
 
   menuSheet: {
-    backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    backgroundColor: COLORS.text.white, borderTopLeftRadius: 20, borderTopRightRadius: 20,
     padding: 20, paddingBottom: 40,
   },
-  menuItem: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-  menuItemText: { fontSize: 17, color: '#191F28', fontWeight: '500' },
+  menuItem: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  menuItemText: { fontSize: 17, color: COLORS.text.main, fontWeight: '500' },
 
   saveSheet: {
-    backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: COLORS.text.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 24, paddingBottom: 40,
   },
-  saveSheetTitle: { fontSize: 20, fontWeight: 'bold', color: '#191F28', marginBottom: 16 },
-  infoBox: { backgroundColor: '#F5FBF6', borderRadius: 12, padding: 14, marginBottom: 20 },
-  infoTitle: { fontSize: 17, fontWeight: 'bold', color: '#191F28' },
-  infoSub: { fontSize: 13, color: '#8B95A1', marginTop: 4 },
-  inputLabel: { fontSize: 14, fontWeight: '600', color: '#4E5968', marginBottom: 8 },
+  saveSheetTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 16 },
+  infoBox: { backgroundColor: COLORS.background, borderRadius: 12, padding: 14, marginBottom: 20 },
+  infoTitle: { fontSize: 17, fontWeight: 'bold', color: COLORS.text.main },
+  infoSub: { fontSize: 13, color: COLORS.text.hint, marginTop: 4 },
+  inputLabel: { fontSize: 14, fontWeight: '600', color: COLORS.text.sub, marginBottom: 8 },
   emojiRow: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#F5FBF6', borderRadius: 12,
+    backgroundColor: COLORS.background, borderRadius: 12,
     padding: 14, marginBottom: 20,
   },
   emojiInput: { fontSize: 32, marginRight: 12, minWidth: 44 },
-  emojiHint: { fontSize: 14, color: '#8B95A1' },
+  emojiHint: { fontSize: 14, color: COLORS.text.hint },
   memoInput: {
-    backgroundColor: '#F5FBF6', borderRadius: 12,
-    padding: 14, fontSize: 16, color: '#191F28', marginBottom: 24,
+    backgroundColor: COLORS.background, borderRadius: 12,
+    padding: 14, fontSize: 16, color: COLORS.text.main, marginBottom: 24,
   },
-  saveButton: { backgroundColor: '#ADEBB3', borderRadius: 14, padding: 16, alignItems: 'center' },
-  saveButtonText: { fontSize: 17, fontWeight: 'bold', color: '#191F28' },
+  saveButton: { backgroundColor: COLORS.primary, borderRadius: 14, padding: 16, alignItems: 'center' },
+  saveButtonText: { fontSize: 17, fontWeight: 'bold', color: COLORS.text.white },
 
   // styles.StyleSheet.create 안에 추가
   targetStationRow: {
-    backgroundColor: '#E8FBF2',
+    backgroundColor: COLORS.primaryLight,
     borderRadius: 12,
     marginHorizontal: -8,
     paddingHorizontal: 8,
@@ -368,17 +369,17 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    borderColor: '#31D698',
+    borderColor: COLORS.primary,
     borderWidth: 2.5,
     marginTop: -9,
   },
   targetStopName: {
-    color: '#191F28',
+    color: COLORS.text.main,
     fontWeight: 'bold',
   },
   targetBadgeText: {
     fontSize: 12,
-    color: '#31D698',
+    color: COLORS.primary,
     fontWeight: '600',
   },
 });

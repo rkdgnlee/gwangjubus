@@ -3,6 +3,7 @@ import { View, ActivityIndicator } from 'react-native';
 import { storage } from './android/app/src/utils/storage';
 import MainScreen from './android/app/src/screens/MainScreen';
 import RegionSelectScreen from './android/app/src/screens/region/RegionSelectScreen';
+import BootSplash from 'react-native-bootsplash';
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -20,6 +21,7 @@ const App = () => {
     setSavedCityCode(Number(cityCode));
     console.log(city);
     setIsLoading(false); // 로딩 끝
+    await BootSplash.hide({ fade: true });
   };
 
   // 로딩 중일 때 (데이터 읽는 찰나의 순간)

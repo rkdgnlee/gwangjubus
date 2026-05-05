@@ -6,6 +6,7 @@ import MyContainer from "./My/MyContainer";
 import CityBusContainer from "./CityBus/CityBusContainer";
 import SettingsContainer from "./Settings/SettingsContainer";
 import notifee, { AndroidColor, AndroidImportance, EventType } from '@notifee/react-native';
+import { COLORS } from "../constants/theme";
 import { getSpecifyArriveInfoInBusStop } from "../services/Arrive/getSpecifyArriveInfoInBusStop";
 
 interface MainProps {
@@ -65,7 +66,7 @@ const TabButton = ({
   };
 
   const { icon, label } = config[tab];
-  const activeColor = isActive ? "#191F28" : "#B0B8C1"; // Toss Black vs Gray
+  const activeColor = isActive ? COLORS.secondary : COLORS.text.muted;
 
   return (
     <TouchableOpacity
@@ -85,8 +86,8 @@ const TabButton = ({
 
 const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('My');
-  const [, setFavorites] = useState<IFavoriteBus[]>([]);
-  const [, setCityBusInitData] = useState<{ type: 'bus' | 'stop', data: any } | null>(null);
+  const [favorites, setFavorites] = useState<IFavoriteBus[]>([]);
+  const [cityBusInitData, setCityBusInitData] = useState<{ type: 'bus' | 'stop', data: any } | null>(null);
   const [cityBusKey, setCityBusKey] = useState(0); // 시내버스 탭 초기화를 위한 카운터
   const [activeAlarmId, setActiveAlarmId] = useState<string | null>(null);
   const [lastPrevCount, setLastPrevCount] = useState<number | null>(null);
@@ -239,7 +240,7 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
           id: 'bus-arrival-alert',
           name: '버스 도착 알림',
           lights: true,
-          lightColor: AndroidColor.GREEN,
+          lightColor: AndroidColor.BLUE,
           importance: AndroidImportance.HIGH,
           vibration: true,
         });
@@ -299,6 +300,7 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
             key={`city-bus-${cityBusKey}`} // 키가 바뀌면 화면이 초기화됨
             cityName={cityName} 
             cityCode={cityCode}
+            initialData={cityBusInitData}
             activeAlarmId={activeAlarmId}    // ← 추가
             onToggleAlarm={onToggleAlarm}    // ← 추가
           />
@@ -321,11 +323,11 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
 
   return (
     <>
-      {/* 1. 상단 상태바 배경 (민트색) - flex: 0으로 영역만 차지 */}
-      <SafeAreaView style={{ flex: 0, backgroundColor: '#F5FBF6' }} />
+      {/* 1. 상단 상태바 배경 - flex: 0으로 영역만 차지 */}
+      <SafeAreaView style={{ flex: 0, backgroundColor: COLORS.background }} />
       
       {/* 2. 메인 화면 (하단 Safe Area는 바텀바와 같은 흰색으로 처리) */}
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.text.white }}>
         <View style={styles.container}>
           {/* 메인 콘텐츠 영역 */}
           <View style={styles.contentArea}>
@@ -359,7 +361,7 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5FBF6' }, // 민트 테마 배경
+  container: { flex: 1, backgroundColor: COLORS.background }, // 블루 테마 배경
   contentArea: { flex: 1 },
   tabContent: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -369,7 +371,7 @@ const styles = StyleSheet.create({
   bottomNav: {
     flexDirection: 'row',
     height: 60, // 높이를 컴팩트하게 조정
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.text.white,
     alignItems: 'center', // 세로 중앙 정렬
     justifyContent: 'space-around',
     
@@ -379,7 +381,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     borderTopWidth: 1, // Android/iOS 공통: 상단 경계선 추가
-    borderTopColor: '#f0f0f0',
+    borderTopColor: COLORS.border,
     elevation: 0, // Android: 하단 그림자 제거
   },
   tabButton: { flex: 1, justifyContent: 'center', alignItems: 'center' },

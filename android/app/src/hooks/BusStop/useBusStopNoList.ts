@@ -21,12 +21,22 @@ export const useBusStopNoList = () => {
     try {
       const stopList = await getBusStopNoList(cityCode, nodeNm, nodeNo);
 
+      // stopList가 null, undefined이거나 배열이 아닌 경우(에러 발생 시 등) 예외 처리
+      if (!stopList || !Array.isArray(stopList)) {
+        setStops([]);
+        return;
+      }
+
       // 각 정류장마다 경유 버스 목록 병렬 조회
       const stopsWithRoutes = await Promise.all(
         stopList.map(async (stop) => {
+          // stop 객체가 유효한지 한 번 더 체크
+          if (!stop || !stop.nodeid) return { ...stop, routes: [] };
           try {
             const routes = await getBusStopThroghRouteList(cityCode, stop.nodeid, 10);
-            return { ...stop, routes: Array.isArray(routes) ? routes : [routes] };
+            // routes 데이터가 단일 객체이거나 없을 경우를 대비해 배열로 정규화
+            const validRoutes = Array.isArray(routes) ? routes : (routes ? [routes] : []);
+            return { ...stop, routes: validRoutes };
           } catch {
             return { ...stop, routes: [] };
           }

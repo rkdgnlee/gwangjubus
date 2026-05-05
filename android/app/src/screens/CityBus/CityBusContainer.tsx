@@ -7,6 +7,7 @@ import BusResultList from './BusResultList';
 import { useBusRouteNoList } from '../../hooks/BusRoute/useBusRouteNoList';
 import { useBusStopNoList } from '../../hooks/BusStop/useBusStopNoList';
 import { useSearchHistory } from '../../hooks/search/useSearchHistory';
+import { COLORS } from '../../constants/theme';
 
 interface Props {
   cityName: string;
@@ -16,11 +17,14 @@ interface Props {
   onToggleAlarm?: (item: any, stopInfo: any, cityCode: number) => void;
 }
 
-const CityBusContainer = ({ cityName, cityCode,initialData, activeAlarmId, onToggleAlarm }: Props) => {
+const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onToggleAlarm }: Props) => {
   const [searchMode, setSearchMode] = useState<'bus' | 'stop'>('bus');
   const [searchText, setSearchText] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
-  const [navStack, setNavStack] = useState<any[]>([]);
+  // initialData가 있으면 스택을 해당 화면으로 시작, 없으면 빈 스택(검색창)으로 시작
+  const [navStack, setNavStack] = useState<any[]>(
+    initialData ? [{ screen: initialData.type, data: initialData.data }] : []
+  );
   const { routes, loading: busLoading, search: searchBus, reset: resetBus } = useBusRouteNoList();
   const { stops, loading: stopLoading, search: searchStop, reset: resetStop } = useBusStopNoList();
 
@@ -46,6 +50,10 @@ const CityBusContainer = ({ cityName, cityCode,initialData, activeAlarmId, onTog
 
   useEffect(() => {
     if (initialData) {
+      // 즐겨찾기로 진입 시 기존 검색 상태 초기화
+      setSearchText('');
+      setHasSearched(false);
+      // 스택을 즐겨찾기 화면으로 교체
       setNavStack([{ screen: initialData.type, data: initialData.data }]);
     }
   }, [initialData]);
@@ -143,8 +151,8 @@ const CityBusContainer = ({ cityName, cityCode,initialData, activeAlarmId, onTog
       <View style={{ flex: 1 }}>
         {isLoading ? (
           <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color="#ADEBB3" />
-            <Text style={{ marginTop: 10, color: '#888' }}>정보를 불러오고 있어요...</Text>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text style={{ marginTop: 10, color: COLORS.text.sub }}>정보를 불러오고 있어요...</Text>
           </View>
         ) : hasSearched ? (
           <BusResultList
@@ -194,11 +202,11 @@ const CityBusContainer = ({ cityName, cityCode,initialData, activeAlarmId, onTog
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5FBF6' },
+  container: { flex: 1, backgroundColor: COLORS.background },
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#191F28',
+    color: COLORS.text.main,
     marginBottom: 15,
     marginTop: 24,
     marginLeft: 20,
@@ -208,18 +216,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingTop: 25,
     paddingBottom: 15,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.text.white,
   },
   toggleBtn: {
     marginRight: 10,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: '#EEF6F0',
+    backgroundColor: COLORS.border,
   },
-  toggleBtnActive: { backgroundColor: '#ADEBB3' },
-  toggleText: { color: '#888', fontWeight: '600', fontSize: 14 },
-  toggleTextActive: { color: '#191F28', fontWeight: 'bold' },
+  toggleBtnActive: { backgroundColor: COLORS.primary },
+  toggleText: { color: COLORS.text.hint, fontWeight: '600', fontSize: 14 },
+  toggleTextActive: { color: COLORS.text.white, fontWeight: 'bold' },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   historyContainer: { flex: 1, paddingHorizontal: 20, paddingTop: 10 },
   historyHeader: {
@@ -228,19 +236,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 15,
   },
-  historyTitle: { fontSize: 16, fontWeight: 'bold', color: '#4E5968' },
-  clearHistoryText: { fontSize: 13, color: '#B0B8C1' },
+  historyTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.text.sub },
+  clearHistoryText: { fontSize: 13, color: COLORS.text.muted },
   historyItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#F2F4F6',
+    borderBottomColor: COLORS.border,
   },
-  historyItemText: { fontSize: 16, color: '#333D4B' },
-  historyDeleteBtn: { fontSize: 14, color: '#B0B8C1', paddingHorizontal: 8 },
-  emptyHistory: { color: '#aaa', fontSize: 14, textAlign: 'center', marginTop: 30 },
+  historyItemText: { fontSize: 16, color: COLORS.text.main },
+  historyDeleteBtn: { fontSize: 14, color: COLORS.text.muted, paddingHorizontal: 8 },
+  emptyHistory: { color: COLORS.text.muted, fontSize: 14, textAlign: 'center', marginTop: 30 },
 });
 
 export default CityBusContainer;
