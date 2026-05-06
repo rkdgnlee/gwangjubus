@@ -1898,6 +1898,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNDeviceInfo (15.0.2):
+    - React-Core
   - RNNotifee (9.1.8):
     - React-Core
     - RNNotifee/NotifeeCore (= 9.1.8)
@@ -2027,6 +2029,7 @@ DEPENDENCIES:
   - ReactNativeDependencies (from `../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)
   - RNBootSplash (from `../node_modules/react-native-bootsplash`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
+  - RNDeviceInfo (from `../node_modules/react-native-device-info`)
   - "RNNotifee (from `../node_modules/@notifee/react-native`)"
   - RNSVG (from `../node_modules/react-native-svg`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
@@ -2183,6 +2186,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-bootsplash"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
+  RNDeviceInfo:
+    :path: "../node_modules/react-native-device-info"
   RNNotifee:
     :path: "../node_modules/@notifee/react-native"
   RNSVG:
@@ -2266,6 +2271,7 @@ SPEC CHECKSUMS:
   ReactNativeDependencies: f098350e4bfdb1b6e4be51905f9e9dd24ba2d548
   RNBootSplash: c0d86dded541a26441dd35d927fae3f0855af499
   RNCAsyncStorage: 7a5a6094f9f6b9158e72f1855cd86e769413d851
+  RNDeviceInfo: 4c852998208b60dc192ae3529e5867817719ad1e
   RNNotifee: 5e3b271e8ea7456a36eec994085543c9adca9168
   RNSVG: c69f7709226108f5eb89b5aa8833c17a36345468
   Yoga: c0b3f2c7e8d3e327e450223a2414ca3fa296b9a2

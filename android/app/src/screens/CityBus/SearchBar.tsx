@@ -15,7 +15,7 @@ const SearchBar = ({ value, onChangeText, onSearch }: SearchBarProps) => {
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={styles.input}
-          placeholder="버스 번호 또는 정류장 검색"
+          placeholder="버스 번호, 정류장 이름"
           placeholderTextColor="#ADB5BD"
           value={value}
           onChangeText={onChangeText}

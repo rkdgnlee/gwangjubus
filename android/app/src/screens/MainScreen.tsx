@@ -94,9 +94,9 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
   const monitoringRef = useRef<{ routeid: string; cityCode: number; nodeid: string; nodenm: string; routeno: string } | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastArrtimeRef = useRef<number | null>(null); // ← 추가
+  const autoStopRef = useRef<NodeJS.Timeout | null>(null);
 
   const onToggleAlarm = (item: any, stopInfo: any, cityCode: number) => {
-    const autoStopRef = useRef<NodeJS.Timeout | null>(null);
 
     if (activeAlarmId === item.routeid) {
       setActiveAlarmId(null);
@@ -203,19 +203,35 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
         if (lastPrevCount !== null && currentStops < lastPrevCount) {
           const title = `🚌 ${mon.routeno}번 버스 접근 중`;
           const body = `${currentStops}정거장 전이에요. 준비하세요!`;
+          
           if (Platform.OS === 'android') {
             await notifee.displayNotification({
               title, body,
-              android: { channelId: 'bus-arrival-alert', smallIcon: 'ic_launcher', pressAction: { id: 'default' } },
+              android: { 
+                channelId: 'bus-arrival-alert', 
+                smallIcon: 'ic_launcher', 
+                pressAction: { id: 'default' },
+                vibrationPattern: [0, 500, 100, 500], // ← 알림에도 명시
+              },
             });
+            Vibration.vibrate([0, 500, 100, 500]); // Android는 같이 써도 OK
           }
+          
           if (Platform.OS === 'ios') {
             await notifee.displayNotification({
               title, body,
-              ios: { sound: 'default', foregroundPresentationOptions: { alert: true, sound: true, badge: false } },
+              ios: { 
+                sound: 'default', 
+                foregroundPresentationOptions: { 
+                  alert: true, 
+                  sound: true, 
+                  badge: false 
+                } 
+              },
             });
+            // iOS 포그라운드 진동은 Vibration API로 따로
+            Vibration.vibrate([0, 500, 100, 500]);
           }
-          Vibration.vibrate([0, 500, 100, 500]);
         }
 
         setLastPrevCount(currentStops);
@@ -234,7 +250,9 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
   useEffect(() => {
     // 포그라운드
     const setup = async () => {
-      if (Platform.OS === 'ios') await notifee.requestPermission();
+      const settings = await notifee.requestPermission();
+      console.log('알림 권한:', settings.authorizationStatus);
+      
       if (Platform.OS === 'android') {
         await notifee.createChannel({
           id: 'bus-arrival-alert',
@@ -370,7 +388,8 @@ const styles = StyleSheet.create({
   // 바텀 네비게이션 스타일
   bottomNav: {
     flexDirection: 'row',
-    height: 60, // 높이를 컴팩트하게 조정
+    height: Platform.OS === 'ios' ? 60 : 90,
+    paddingBottom: Platform.OS === 'ios' ? 0 : 10,
     backgroundColor: COLORS.text.white,
     alignItems: 'center', // 세로 중앙 정렬
     justifyContent: 'space-around',

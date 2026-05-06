@@ -9,6 +9,7 @@ export const getBusStopNoList = async (cityCode: number, nodeNm: string, nodeNo?
     );
     const data = await response.json();
     const item = data.response.body.items.item;
+    if (!item) return []; // ← null 반환
     return Array.isArray(item) ? item : [item];
   } catch (error) {
     console.error('Error fetching bus stop info:', error);

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal, TextInput, Scro
 import { storage } from '../../utils/storage';
 import HistoryManageScreen from '../My/HistoryManageScreen';
 import { COLORS } from '../../constants/theme';
+import DeviceInfo from 'react-native-device-info';
 
 interface SettingsProps {
   cityName: string;
@@ -15,7 +16,7 @@ const SettingsContainer = ({ cityName, onChangeRegion }: SettingsProps) => {
   const [review, setReview] = useState('');
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showHistoryManage, setShowHistoryManage] = useState(false); // ← 추가
-
+  console.log(DeviceInfo.getVersion());
   const handleFeatureNotice = () => {
     Alert.alert("준비 중인 기능", "실제 버스 탑승 기록을 기반으로 나만의 이동 타임라인을 만드는 기능이 업데이트될 예정입니다.");
   };
@@ -108,7 +109,7 @@ const SettingsContainer = ({ cityName, onChangeRegion }: SettingsProps) => {
         
         <View style={styles.versionContainer}>
           <Text style={styles.versionTitle}>앱 버전</Text>
-          <Text style={styles.versionText}>v1.0.0</Text>
+          <Text style={styles.versionText}>{DeviceInfo.getVersion()}</Text>
         </View>
       </View>
 

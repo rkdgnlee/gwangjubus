@@ -51,9 +51,9 @@ const ScheduleSection = ({ onNavigate }: Props) => {
       <View style={styles.container}>
         <Text style={styles.headerTitle}>나의 탑승 기록</Text>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyEmoji}>🚌</Text>
+          <Text style={styles.emptyEmoji}>🤫</Text>
           <Text style={styles.emptyText}>아직 탑승 기록이 없어요.</Text>
-          <Text style={styles.emptySubText}>1정거장 전 버스가 오면 탑승 확인을 눌러보세요!</Text>
+          <Text style={styles.emptySubText}>버스에 타기 전에 버튼을 눌러 탑승 표시를 찍어보세요!</Text>
         </View>
       </View>
     );

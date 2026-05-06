@@ -63,8 +63,14 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
   };
 
   const handleUnsave = async () => {
-    await removeFavorite(getFavoriteId('bus', busInfo.routeid));
-    setMenuVisible(false);
+    const favoriteId = getFavoriteId('bus', busInfo.routeid);
+      if (!favoriteId) {
+          console.warn('favoriteId not found');
+          setMenuVisible(false);
+          return;
+      }
+      await removeFavorite(favoriteId);
+      setMenuVisible(false);
   };
 
   const handleOpenSaveModal = () => {
@@ -75,8 +81,9 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
   const locationMap: Record<string, IBusLocation[]> = {};
   console.log(locations)
   locations.forEach(loc => {
-    if (!locationMap[loc.nodeid]) locationMap[loc.nodeid] = [];
-    locationMap[loc.nodeid].push(loc);
+    if (!loc || !loc.nodeid) return; // ← 추가
+      if (!locationMap[loc.nodeid]) locationMap[loc.nodeid] = [];
+      locationMap[loc.nodeid].push(loc);
   });
 
   const sortedStops = [...stops].sort((a, b) => a.nodeord - b.nodeord);

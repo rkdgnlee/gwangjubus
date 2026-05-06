@@ -1,7 +1,6 @@
 // getBusRouteInfo.ts
 import { PUBLIC_API_PRIVATE_KEY, API_BUS_ROUTE_URL } from '@env';
 import { IBusRouteInfo } from '../../types/bus';
-// /getRouteInfoIem?serviceKey=ㅁㅁㅁ&_type=xml&cityCode=25&routeId=DJB30300004
 export const getBusRouteInfo = async (cityCode: number, routeId: string): Promise<IBusRouteInfo> => {
   try {
     const response = await fetch(

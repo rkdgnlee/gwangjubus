@@ -61,7 +61,7 @@ const SaveModal = ({ visible, title, subtitle, onClose, onSave }: SaveModalProps
             onChangeText={setMemo}
             placeholder="예: 출근길, 버스 놓쳤을 때..."
             placeholderTextColor={COLORS.text.muted}
-            maxLength={20}
+            maxLength={8}
           />
 
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
