@@ -4,6 +4,7 @@ import { storage } from './android/app/src/utils/storage';
 import MainScreen from './android/app/src/screens/MainScreen';
 import RegionSelectScreen from './android/app/src/screens/region/RegionSelectScreen';
 import BootSplash from 'react-native-bootsplash';
+import MobileAds from 'react-native-google-mobile-ads';
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -12,6 +13,9 @@ const App = () => {
 
   useEffect(() => {
     checkStorage();
+    MobileAds().initialize().then(() => {
+      console.log('AdMob initialized');
+    });
   }, []);
 
   const checkStorage = async () => {

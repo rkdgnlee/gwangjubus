@@ -8,12 +8,19 @@ import SettingsContainer from "./Settings/SettingsContainer";
 import notifee, { AndroidColor, AndroidImportance, EventType } from '@notifee/react-native';
 import { COLORS } from "../constants/theme";
 import { getSpecifyArriveInfoInBusStop } from "../services/Arrive/getSpecifyArriveInfoInBusStop";
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 
 interface MainProps {
   cityName: string;
   cityCode: number;
   onReset: () => void;
 }
+const BANNER_AD_UNIT_ID = __DEV__
+  ? TestIds.BANNER
+  : Platform.select({
+      android: 'ca-app-pub-3416794558474799/2652030442', // 기존 Android 배너 Unit ID
+      ios: 'ca-app-pub-3416794558474799/7403269915',     // 기존 iOS 배너 Unit ID
+    })!;
 
 // 탭 타입 정의
 type TabType = 'My' | 'CityBus' | /* 'ExpressBus' | */ 'Settings';
@@ -352,6 +359,11 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
             {renderContent()}
           </View>
 
+          <BannerAd
+            unitId={BANNER_AD_UNIT_ID}
+            size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+            requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+          />
           {/* 커스텀 바텀 네비게이션 바 */}
           <View style={styles.bottomNav}>
             {(['My', 'CityBus', /* 'ExpressBus', */ 'Settings'] as TabType[]).map((tab) => (

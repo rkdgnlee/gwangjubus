@@ -1,4 +1,8 @@
 {
   "name": "GwangjuBus",
-  "displayName": "GwangjuBus"
+  "displayName": "GwangjuBus",
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-3416794558474799~2652030442",
+    "ios_app_id": "ca-app-pub-3416794558474799~7403269915"
+  }
 }

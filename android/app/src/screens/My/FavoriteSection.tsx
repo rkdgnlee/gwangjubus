@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Platform } from 'react-native';
 import { IFavorite, IFavoriteStop, IFavoriteBus } from '../../types/favorite';
 import { useFavorites } from '../../hooks/favorites/useFavorites';
 import { COLORS } from '../../constants/theme';
@@ -84,20 +84,20 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.text.white,
     borderRadius: 16,
     paddingHorizontal: 12, // 좌우 여백을 균일하게
-    paddingTop: 8,         // 상단 패딩 축소 (기존 10)
-    paddingBottom: 8,      // 하단 패딩 조정
+    paddingTop: Platform.OS === 'ios' ? 12 : 8,         // 상단 패딩 축소 (기존 10)
+    paddingBottom: Platform.OS === 'ios' ? 12 : 8,      // 하단 패딩 조정
     width: '48%',
     aspectRatio: 4 / 3,
     elevation: 1, shadowColor: '#000', shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 }, shadowRadius: 8,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
-  emoji: { fontSize: 22 },
+  emoji: { fontSize: Platform.OS === 'ios' ? 24 : 22 },
   userTitle: { fontSize: 14, fontWeight: '700', color: COLORS.text.main, marginLeft: 6, flex: 1 },
   infoContainer: { marginTop: 'auto' },
   typeBadge: { backgroundColor: COLORS.primaryLight, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, alignSelf: 'flex-start', marginBottom: 6 },
   typeBadgeText: { fontSize: 11, color: COLORS.primaryDark, fontWeight: '600' },
-  mainName: { fontSize: 16, fontWeight: '700', color: COLORS.text.main, marginBottom: 4 },
+  mainName: { fontSize: 16, fontWeight: '700', color: COLORS.text.main, marginBottom: Platform.OS === 'ios' ? 6 : 4 },
   subName: { fontSize: 12, color: COLORS.text.hint },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyEmoji: { fontSize: 48, marginBottom: 12 },

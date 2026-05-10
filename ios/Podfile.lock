@@ -1,5 +1,8 @@
 PODS:
   - FBLazyVector (0.84.1)
+  - Google-Mobile-Ads-SDK (13.1.0):
+    - GoogleUserMessagingPlatform (>= 1.1)
+  - GoogleUserMessagingPlatform (3.1.0)
   - hermes-engine (250829098.0.9):
     - hermes-engine/Pre-built (= 250829098.0.9)
   - hermes-engine/Pre-built (250829098.0.9)
@@ -1900,6 +1903,30 @@ PODS:
     - Yoga
   - RNDeviceInfo (15.0.2):
     - React-Core
+  - RNGoogleMobileAds (16.3.3):
+    - Google-Mobile-Ads-SDK (= 13.1.0)
+    - GoogleUserMessagingPlatform (= 3.1.0)
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - RNNotifee (9.1.8):
     - React-Core
     - RNNotifee/NotifeeCore (= 9.1.8)
@@ -2030,9 +2057,15 @@ DEPENDENCIES:
   - RNBootSplash (from `../node_modules/react-native-bootsplash`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - RNDeviceInfo (from `../node_modules/react-native-device-info`)
+  - RNGoogleMobileAds (from `../node_modules/react-native-google-mobile-ads`)
   - "RNNotifee (from `../node_modules/@notifee/react-native`)"
   - RNSVG (from `../node_modules/react-native-svg`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
+
+SPEC REPOS:
+  trunk:
+    - Google-Mobile-Ads-SDK
+    - GoogleUserMessagingPlatform
 
 EXTERNAL SOURCES:
   FBLazyVector:
@@ -2188,6 +2221,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNDeviceInfo:
     :path: "../node_modules/react-native-device-info"
+  RNGoogleMobileAds:
+    :path: "../node_modules/react-native-google-mobile-ads"
   RNNotifee:
     :path: "../node_modules/@notifee/react-native"
   RNSVG:
@@ -2197,6 +2232,8 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   FBLazyVector: e97c19a5a442429d1988f182a1940fb08df514da
+  Google-Mobile-Ads-SDK: 8429bef6ee1a4e322b0a5571b64217ed8317a3d5
+  GoogleUserMessagingPlatform: befe603da6501006420c206222acd449bba45a9c
   hermes-engine: 399a538977435a52885f5eeab9ffe79a5ad3a565
   RCTDeprecation: af44b104091a34482596cd9bd7e8d90c4e9b4bd7
   RCTRequired: bb77b070f75f53398ce43c0aaaa58337cebe2bf6
@@ -2272,6 +2309,7 @@ SPEC CHECKSUMS:
   RNBootSplash: c0d86dded541a26441dd35d927fae3f0855af499
   RNCAsyncStorage: 7a5a6094f9f6b9158e72f1855cd86e769413d851
   RNDeviceInfo: 4c852998208b60dc192ae3529e5867817719ad1e
+  RNGoogleMobileAds: 7d442aa08f60f9ad22a6345d4f69c4b6ae052309
   RNNotifee: 5e3b271e8ea7456a36eec994085543c9adca9168
   RNSVG: c69f7709226108f5eb89b5aa8833c17a36345468
   Yoga: c0b3f2c7e8d3e327e450223a2414ca3fa296b9a2
