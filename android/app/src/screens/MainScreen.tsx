@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { favoriteStorage } from "../utils/favoriteStorage";
 import { IFavoriteBus } from "../types/favorite";
-import { Text, View, StyleSheet, TouchableOpacity, SafeAreaView, Animated, Easing, Platform, Vibration } from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity, SafeAreaView, Animated, Easing, Platform, Vibration, Button } from "react-native";
 import MyContainer from "./My/MyContainer";
 import CityBusContainer from "./CityBus/CityBusContainer";
 import SettingsContainer from "./Settings/SettingsContainer";
@@ -18,7 +18,7 @@ interface MainProps {
 const BANNER_AD_UNIT_ID = __DEV__
   ? TestIds.BANNER
   : Platform.select({
-      android: 'ca-app-pub-3416794558474799/2652030442', // 기존 Android 배너 Unit ID
+      android: 'ca-app-pub-3416794558474799/6340495028', // 기존 Android 배너 Unit ID
       ios: 'ca-app-pub-3416794558474799/7403269915',     // 기존 iOS 배너 Unit ID
     })!;
 

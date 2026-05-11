@@ -12,7 +12,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        
+        classpath("com.google.gms:google-services:4.3.15") // Google Services 플러그인
+        classpath("com.google.firebase:firebase-crashlytics-gradle:2.9.7") // Firebase Crashlytics 플러그인
         classpath("com.android.tools.build:gradle")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")

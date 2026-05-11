@@ -5,17 +5,34 @@ import MainScreen from './android/app/src/screens/MainScreen';
 import RegionSelectScreen from './android/app/src/screens/region/RegionSelectScreen';
 import BootSplash from 'react-native-bootsplash';
 import MobileAds from 'react-native-google-mobile-ads';
+import { getCrashlytics } from '@react-native-firebase/crashlytics';
 
 const App = () => {
+  
   const [isLoading, setIsLoading] = useState(true);
   const [savedCity, setSavedCity] = useState<string | null>(null);
   const [savedCityCode, setSavedCityCode] = useState<number | null>(null);
-
   useEffect(() => {
     checkStorage();
-    MobileAds().initialize().then(() => {
-      console.log('AdMob initialized');
-    });
+
+    const initAds = async () => {
+      // Crashlytics 먼저 활성화
+      await getCrashlytics().setCrashlyticsCollectionEnabled(true);
+
+      try {
+        await MobileAds().initialize();
+        console.log('AdMob initialized');
+        getCrashlytics().log('AdMob 초기화 성공');
+      } catch (error: any) {
+        console.error('AdMob initialization error:', error);
+        getCrashlytics().log('AdMob 초기화 중 예외 발생');
+        getCrashlytics().recordError(
+          new Error(`AdMob_Init_Failure: ${error.message || '알 수 없는 오류'}`)
+        );
+      }
+    };
+
+    initAds();
   }, []);
 
   const checkStorage = async () => {
