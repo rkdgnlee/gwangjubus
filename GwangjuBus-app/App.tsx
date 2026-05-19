@@ -5,8 +5,7 @@ import MainScreen from './android/app/src/screens/MainScreen';
 import RegionSelectScreen from './android/app/src/screens/region/RegionSelectScreen';
 import BootSplash from 'react-native-bootsplash';
 import MobileAds from 'react-native-google-mobile-ads';
-import { getCrashlytics } from '@react-native-firebase/crashlytics';
-
+import crashlytics from '@react-native-firebase/crashlytics';
 const App = () => {
   
   const [isLoading, setIsLoading] = useState(true);
@@ -17,16 +16,16 @@ const App = () => {
 
     const initAds = async () => {
       // Crashlytics 먼저 활성화
-      await getCrashlytics().setCrashlyticsCollectionEnabled(true);
+      await crashlytics().setCrashlyticsCollectionEnabled(true);
 
       try {
         await MobileAds().initialize();
         console.log('AdMob initialized');
-        getCrashlytics().log('AdMob 초기화 성공');
+        await crashlytics().setUserId("user_id");
       } catch (error: any) {
         console.error('AdMob initialization error:', error);
-        getCrashlytics().log('AdMob 초기화 중 예외 발생');
-        getCrashlytics().recordError(
+        await crashlytics().log('AdMob 초기화 중 예외 발생');
+        await crashlytics().recordError(
           new Error(`AdMob_Init_Failure: ${error.message || '알 수 없는 오류'}`)
         );
       }
