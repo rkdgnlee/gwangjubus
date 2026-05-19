@@ -12,7 +12,7 @@ export const getBusStopThroghRouteList = async (
       `${API_STOP_URL}/getSttnThrghRouteList?serviceKey=${PUBLIC_API_PRIVATE_KEY}&pageNo=1&numOfRows=${numOfRows}&_type=json&cityCode=${cityCode}&nodeid=${nodeid}`
     );
     const data = await response.json();
-    const item = data.response.body.items.item;
+    const item = data.response.body.items?.item;
     if (!item) return []; // ← null 반환
     return Array.isArray(item) ? item : [item];
   } catch (error) {

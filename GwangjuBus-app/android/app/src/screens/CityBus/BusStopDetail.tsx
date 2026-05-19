@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity, FlatList,
   ActivityIndicator, RefreshControl, Animated, PanResponder,
-  Alert, InteractionManager
+  Alert, InteractionManager, Platform
 } from 'react-native';
 import { getBusTypeColor } from '../../constants/busColors';
 import { IArriveWithDestination, useArriveInfoInBusStop } from '../../hooks/Arrive/useArriveInfoInBusStop';
@@ -181,7 +181,13 @@ const BusStopDetail = ({ stopInfo, cityName, cityCode, onBack, onBusPress, activ
         <TouchableOpacity style={styles.busItem} activeOpacity={0.7} onPress={handleBusPress}>
           <View style={styles.busInfoLeft}>
             <Text style={[styles.busName, { color }]}>{item.routeno}</Text>
-            <Text style={styles.busDirection}>{item.endnodenm} 종점</Text>
+            <Text 
+              style={styles.busDirection}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {item.endnodenm} 종점
+            </Text>
           </View>
           <View style={styles.busInfoRight}>
             {hasArrival ? (
@@ -329,32 +335,32 @@ const styles = StyleSheet.create({
   backButton: { padding: 5, marginRight: 10 },
   backText: { fontSize: 24, color: COLORS.text.main },
   headerContent: { flex: 1 },
-  stopName: { fontSize: 20, fontWeight: 'bold', color: COLORS.text.main },
-  arsId: { fontSize: 13, color: COLORS.text.hint, marginTop: 2 },
+  stopName: { fontSize: Platform.OS === 'ios' ? 20 : 18, fontWeight: 'bold', color: COLORS.text.main },
+  arsId: { fontSize: Platform.OS === 'ios' ? 13 : 12, color: COLORS.text.hint, marginTop: 2 },
   menuButton: { padding: 8 },
   menuText: { fontSize: 20, color: COLORS.text.main, fontWeight: 'bold', letterSpacing: 2 },
 
   listHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15 },
-  listTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.text.main },
-  listCount: { fontSize: 14, color: COLORS.text.hint },
+  listTitle: { fontSize: Platform.OS === 'ios' ? 18 : 16, fontWeight: 'bold', color: COLORS.text.main },
+  listCount: { fontSize: Platform.OS === 'ios' ? 14 : 12, color: COLORS.text.hint },
   listContent: { paddingHorizontal: 20, paddingBottom: 30 },
 
   busItem: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    padding: 20, backgroundColor: COLORS.text.white, borderRadius: 16, marginBottom: 12,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
+    padding: Platform.OS === 'ios' ? 20 : 15, backgroundColor: COLORS.text.white, borderRadius: 16, marginBottom: 12,
     elevation: 2, shadowColor: '#000', shadowOpacity: 0.04,
     shadowOffset: { width: 0, height: 4 }, shadowRadius: 8,
   },
-  busInfoLeft: { justifyContent: 'center' },
-  busName: { fontSize: 24, fontWeight: 'bold', marginBottom: 2 },
-  busDirection: { fontSize: 14, color: COLORS.text.hint, fontWeight: '500' },
+  busInfoLeft: { flex: 1, justifyContent: 'center', marginRight: 12 },
+  busName: { fontSize: Platform.OS === 'ios' ? 24 : 22, fontWeight: 'bold', marginBottom: 2 },
+  busDirection: { fontSize: Platform.OS === 'ios' ? 14 : 12, color: COLORS.text.hint, fontWeight: '500' },
   busInfoRight: { alignItems: 'flex-end' },
   timeRow: { flexDirection: 'row', alignItems: 'center' },
   alarmIcon: { padding: 8, marginRight: 4 },
   timeBadge: { 
-    paddingVertical: 6, 
+    paddingVertical: Platform.OS === 'ios' ? 6 : 4, 
     borderRadius: 8, 
-    marginBottom: 6,
+    marginBottom: 4,
     alignItems: 'center',
   },
   timeBadgeLong: { width: 86 },    // 00분 00초
@@ -371,7 +377,7 @@ const styles = StyleSheet.create({
   noArrivalText: { fontSize: 14, color: COLORS.text.muted, fontWeight: '500' },
   guideBox: { 
     flexDirection: 'row', backgroundColor: COLORS.text.white, marginHorizontal: 20, 
-    padding: 12, borderRadius: 12, alignItems: 'center', marginBottom: 10,
+    padding: Platform.OS === 'ios' ? 12 : 10, borderRadius: 12, alignItems: 'center', marginBottom: 10,
     borderWidth: 1, borderColor: COLORS.border
   },
   guideText: { flex: 1, marginLeft: 8, fontSize: 13, color: COLORS.text.sub },
@@ -426,8 +432,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 5,
   },
-  refreshText: { fontSize: 16, fontWeight: 'bold', color: COLORS.text.main, textAlign: 'center', lineHeight: 24 },
-  refreshSubText: { fontSize: 13, color: COLORS.text.hint, marginTop: 16 },
+  refreshText: { fontSize: Platform.OS === 'ios' ? 16 : 15, fontWeight: 'bold', color: COLORS.text.main, textAlign: 'center', lineHeight: 24 },
+  refreshSubText: { fontSize: Platform.OS === 'ios' ? 13 : 12, color: COLORS.text.hint, marginTop: 16 },
 
   boardingButton: {
     backgroundColor: COLORS.primaryLight,
@@ -443,7 +449,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   boardingButtonText: {
-    fontSize: 14,
+    fontSize: Platform.OS === 'ios' ? 14 : 13,
     fontWeight: '600',
     color: COLORS.primaryDark,
   },

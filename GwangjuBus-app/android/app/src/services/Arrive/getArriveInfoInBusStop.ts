@@ -7,7 +7,7 @@ export const getArriveInfoInBusStop = async (cityCode: number, nodeId: string): 
       `${API_STOP_ARRIVE_URL}/getSttnAcctoArvlPrearngeInfoList?serviceKey=${PUBLIC_API_PRIVATE_KEY}&pageNo=1&numOfRows=50&_type=json&cityCode=${cityCode}&nodeId=${nodeId}`
     );
     const data = await response.json();
-    const item = data.response.body.items.item;
+    const item = data.response.body.items?.item;
     if (!item) return []; // ← null 반환
     return Array.isArray(item) ? item : [item];
   } catch (error) {

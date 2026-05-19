@@ -7,7 +7,7 @@ export const getSpecifyBusLocation = async (cityCode: number, routeId: string, n
       `${API_BUS_LOCATION_URL}/getRouteAcctoSpcifySttnAccesBusLcInfo?serviceKey=${PUBLIC_API_PRIVATE_KEY}&pageNo=1&numOfRows=250&_type=json&routeId=${routeId}&nodeId=${nodeId}&cityCode=${cityCode}`
     );
     const data = await response.json();
-    const item = data.response.body.items.item;
+    const item = data.response.body.items?.item;
     if (!item) return []; // ← 추가
     return Array.isArray(item) ? item : [item];
   } catch (error) {
