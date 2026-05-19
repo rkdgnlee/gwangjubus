@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "280217341751",
+    "project_id": "gwangjubus-4910c",
+    "storage_bucket": "gwangjubus-4910c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:280217341751:android:203c1220aea0ac47f794b2",
+        "android_client_info": {
+          "package_name": "com.sardinespicysalad.gwangjubus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDM2TtPYMfDWRfbK8gl-YFkT52n0gwCKMI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      },
+      "admob_app_id": "ca-app-pub-3416794558474799~2652030442"
+    }
+  ],
+  "configuration_version": "1"
+}
