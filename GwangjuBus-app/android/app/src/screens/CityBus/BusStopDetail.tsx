@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import {
   View, Text, StyleSheet, TouchableOpacity, FlatList,
   ActivityIndicator, RefreshControl, Animated, PanResponder,
-  Alert
+  Alert, InteractionManager
 } from 'react-native';
 import { getBusTypeColor } from '../../constants/busColors';
 import { IArriveWithDestination, useArriveInfoInBusStop } from '../../hooks/Arrive/useArriveInfoInBusStop';
@@ -171,10 +171,14 @@ const BusStopDetail = ({ stopInfo, cityName, cityCode, onBack, onBusPress, activ
     const isSoon = currentTime < 60;
     const isMinutesOnly = !isSoon && currentTime % 60 === 0;
     const isOneStopAway = arrprevstationcnt === 1; // ← 추가
-
+    const handleBusPress = () => {
+       InteractionManager.runAfterInteractions(() => {
+         onBusPress({ ...item, fromNodeId: stopInfo.nodeid });
+       });
+     };
     return (
       <View>
-        <TouchableOpacity style={styles.busItem} activeOpacity={0.7} onPress={() => onBusPress({ ...item, fromNodeId: stopInfo.nodeid })}>
+        <TouchableOpacity style={styles.busItem} activeOpacity={0.7} onPress={handleBusPress}>
           <View style={styles.busInfoLeft}>
             <Text style={[styles.busName, { color }]}>{item.routeno}</Text>
             <Text style={styles.busDirection}>{item.endnodenm} 종점</Text>

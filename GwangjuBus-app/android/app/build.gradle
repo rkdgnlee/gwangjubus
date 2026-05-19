@@ -22,8 +22,8 @@ android {
         applicationId "com.sardinespicysalad.gwangjubus"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 23
-        versionName "3.0.4"
+        versionCode 24
+        versionName "3.0.5"
     }
     signingConfigs {
         debug {
