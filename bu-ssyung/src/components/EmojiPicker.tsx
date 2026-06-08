@@ -26,7 +26,7 @@ interface EmojiPickerProps {
 const EmojiPicker = ({ visible, onClose, onSelect }: EmojiPickerProps) => {
   const [activeCategoryIdx, setActiveCategoryIdx] = useState(0);
 
-  const currentCategory = EMOJI_CATEGORIES[activeCategoryIdx];
+  const currentCategory = EMOJI_CATEGORIES[activeCategoryIdx]!;
 
   
     return (

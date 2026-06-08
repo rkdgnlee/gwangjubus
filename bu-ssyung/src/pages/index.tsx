@@ -1,104 +1,46 @@
+import React, { useState, useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { createRoute } from '@granite-js/react-native';
-import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { storage } from '../utils/storage';
+import MainScreen from '../screens/MainScreen';
+import RegionSelectScreen from '../screens/region/RegionSelectScreen';
 
 export const Route = createRoute('/', {
-  component: Page,
+  component: IndexPage,
 });
 
-function Page() {
-  const navigation = Route.useNavigation();
+function IndexPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [savedCity, setSavedCity] = useState<string | null>(null);
+  const [savedCityCode, setSavedCityCode] = useState<number | null>(null);
 
-  const goToAboutPage = () => {
-    navigation.navigate('/about');
+  useEffect(() => {
+    checkStorage();
+  }, []);
+
+  const checkStorage = async () => {
+    const city = await storage.getCity();
+    const cityCode = await storage.getCityCode();
+    setSavedCity(city);
+    setSavedCityCode(Number(cityCode));
+    setIsLoading(false);
   };
 
-  return (
-    <Container>
-      <Text style={styles.title}>🎉 Welcome! 🎉</Text>
-      <Text style={styles.subtitle}>
-        This is a demo page for the <Text style={styles.brandText}>Granite</Text> Framework.
-      </Text>
-      <Text style={styles.description}>This page was created to showcase the features of the Granite.</Text>
-      <TouchableOpacity style={styles.button} onPress={goToAboutPage}>
-        <Text style={styles.buttonText}>Go to About Page</Text>
-      </TouchableOpacity>
-    </Container>
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    );
+  }
+
+  return (savedCity && savedCityCode) ? (
+    <MainScreen
+      cityName={savedCity}
+      cityCode={savedCityCode}
+      onReset={() => setSavedCity(null)}
+    />
+  ) : (
+    <RegionSelectScreen onComplete={checkStorage} />
   );
 }
-
-function Container({ children }: { children: React.ReactNode }) {
-  return <View style={styles.container}>{children}</View>;
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: 'white',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  brandText: {
-    color: '#0064FF',
-    fontWeight: 'bold',
-  },
-  text: {
-    fontSize: 24,
-    color: '#202632',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1A202C',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#4A5568',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  description: {
-    fontSize: 16,
-    color: '#718096',
-    textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 24,
-  },
-  button: {
-    backgroundColor: '#0064FF',
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  codeContainer: {
-    padding: 8,
-    backgroundColor: '#333',
-    borderRadius: 4,
-    width: '100%',
-  },
-  code: {
-    color: 'white',
-    fontFamily: 'monospace',
-    letterSpacing: 0.5,
-    fontSize: 14,
-  },
-});

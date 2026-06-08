@@ -170,8 +170,9 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
           return;
         }
 
-        const currentStops = result[0].arrprevstationcnt;
-        const currentArrtime = result[0].arrtime ?? 9999;
+        const firstResult = result[0]!; // ! 로 undefined 아님을 명시
+        const currentStops = firstResult.arrprevstationcnt;
+        const currentArrtime = firstResult.arrtime ?? 9999;
 
         // 버스 지나친 경우
         if (

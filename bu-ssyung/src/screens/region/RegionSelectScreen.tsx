@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
   FlatList,
-  Alert
+
 } from 'react-native';
 import { storage } from '../../utils/storage';
 import { COLORS } from '../../constants/theme';
@@ -73,9 +73,7 @@ const RegionSelectScreen = ({ onComplete }: RegionSelectProps) => {
     if (!selectedCity) return;
     await storage.setCity(selectedCity.name);
     await storage.setCityCode(selectedCity.code);
-    Alert.alert('설정 완료', `${selectedCity.name}으로 설정되었습니다!`, [
-      { text: '확인', onPress: onComplete }
-    ]);
+    onComplete(); // Alert 제거하고 바로 이동
   };
 
   const cities = selectedProv ? regionData[selectedProv] : [];

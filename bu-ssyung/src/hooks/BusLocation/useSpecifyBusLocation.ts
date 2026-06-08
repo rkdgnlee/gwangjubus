@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
-import { IBusLocation, IBusViaRoute } from '../../types/bus';
-import { getBusRouteAccetoThroghSttnList } from '../../services/BusRoute/getBusRouteAccetoThroghSttnList';
+import { IBusLocation } from '../../types/bus';
 import { getSpecifyBusLocation } from '../../services/BusLocation/getSpecifyBusLocation';
 
 

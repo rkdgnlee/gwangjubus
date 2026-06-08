@@ -80,7 +80,8 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
   locations.forEach(loc => {
     if (!loc || !loc.nodeid) return; // ← 추가
       if (!locationMap[loc.nodeid]) locationMap[loc.nodeid] = [];
-      locationMap[loc.nodeid].push(loc);
+      const mapId = locationMap[loc.nodeid]! 
+      mapId.push(loc);
   });
 
   const sortedStops = [...stops].sort((a, b) => a.nodeord - b.nodeord);

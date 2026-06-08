@@ -16,6 +16,7 @@
   "dependencies": {
     "@apps-in-toss/framework": "^2.6.1",
     "@granite-js/native": "1.0.27",
+    "@granite-js/plugin-env": "^1.0.31",
     "@granite-js/react-native": "1.0.27",
     "@react-native-async-storage/async-storage": "^3.1.1",
     "@toss/tds-react-native": "^2.0.3",
@@ -24,7 +25,7 @@
     "react": "19.2.3",
     "react-native": "0.84.0",
     "react-native-safe-area-context": "^5.8.0",
-    "react-native-svg": "^15.15.5"
+    "react-native-svg": "^15.15.3"
   },
   "devDependencies": {
     "@babel/core": "7.28.5",
