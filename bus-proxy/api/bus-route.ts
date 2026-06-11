@@ -25,7 +25,11 @@ export default async function handler(req: Request) {
         'Access-Control-Allow-Origin': '*',
       },
     });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: 'Fetch failed' }), { status: 500 });
-  }
+    } catch (error) {
+        return new Response(JSON.stringify({ 
+        error: 'Fetch failed',
+        message: String(error),  // ← 추가
+        url: `${BASE_URL}/${endpoint}`  // ← 추가
+        }), { status: 500 });
+    }
 }
