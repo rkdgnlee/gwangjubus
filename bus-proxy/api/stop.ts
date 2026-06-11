@@ -12,11 +12,13 @@ export default async function handler(req: Request) {
   }
 
   const apiKey = process.env.PUBLIC_API_PRIVATE_KEY;
-  searchParams.set('serviceKey', apiKey!);
-  searchParams.set('_type', 'json');
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: 'API key not configured' }), { status: 500 });
+  }
 
   try {
-    const response = await fetch(`${BASE_URL}/${endpoint}?${searchParams.toString()}`);
+    const url = `${BASE_URL}/${endpoint}?serviceKey=${encodeURIComponent(apiKey)}&_type=json&${searchParams.toString()}`;
+    const response = await fetch(url);
     const data = await response.json();
 
     return new Response(JSON.stringify(data), {
@@ -26,6 +28,6 @@ export default async function handler(req: Request) {
       },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: 'Fetch failed' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Fetch failed', message: String(error) }), { status: 500 });
   }
 }
