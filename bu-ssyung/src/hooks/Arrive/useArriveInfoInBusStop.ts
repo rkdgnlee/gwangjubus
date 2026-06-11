@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { IArriveInBusStop } from '../../types/arrive';
-import { getArriveInfoInBusStop } from '../../services/Arrive/getArriveInfoInBusStop';
-import { getBusStopThroghRouteList } from '../../services/BusStop/getBusStopThroghRouteList';
+import { getArriveInfoInBusStop } from '../../services/api-service-proxy'
+import { getBusStopThroghRouteList } from '../../services/api-service-proxy'
 
 export interface IArriveWithDestination extends Omit<Partial<IArriveInBusStop>, 'routeno' | 'routetp'> {
   routeid: string;

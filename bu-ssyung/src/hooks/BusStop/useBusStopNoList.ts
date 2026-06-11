@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { getBusStopNoList } from '../../services/BusStop/getBusStopNoList';
+import { getBusStopNoList } from '../../services/api-service-proxy'
 import { getBusStopThroghRouteList } from '../../services/BusStop/getBusStopThroghRouteList';
 import { IStop, IStopThroghBusRoute } from '../../types/stop';
 

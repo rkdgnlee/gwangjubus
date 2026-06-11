@@ -1,9 +1,9 @@
 // hooks/BusRoute/useBusRouteDetail.ts
 import { useState, useCallback } from 'react';
 import { IBusRouteInfo, IBusViaRoute, IBusLocation } from '../../types/bus';
-import { getBusRouteInfo } from '../../services/BusRoute/getBusRouteInfo';
-import { getBusRouteAccetoThroghSttnList } from '../../services/BusRoute/getBusRouteAccetoThroghSttnList';
-import { getBusLocation } from '../../services/BusLocation/getBusLocation';
+import { getBusRouteInfo } from '../../services/api-service-proxy'
+import { getBusRouteAccetoThroghSttnList } from '../../services/api-service-proxy'
+import { getBusLocation } from '../../services/api-service-proxy'
 
 export interface IBusRouteDetailState {
   info: IBusRouteInfo | null;

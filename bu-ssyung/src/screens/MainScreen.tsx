@@ -15,6 +15,7 @@ import { favoriteStorage } from '../utils/favoriteStorage'; // 기존 경로에 
 import { IFavoriteBus } from '../types/favorite'; // 기존 경로에 맞게 수정
 import { COLORS } from '../constants/theme';
 import { getSpecifyArriveInfoInBusStop } from '../services/Arrive/getSpecifyArriveInfoInBusStop';
+import { useToast } from '@toss/tds-react-native';
 
 interface MainProps {
   cityName: string;
@@ -111,7 +112,7 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastArrtimeRef = useRef<number | null>(null);
   const autoStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  const { open } = useToast();
   const onToggleAlarm = (item: any, stopInfo: any, cityCode: number) => {
     if (activeAlarmId === item.routeid) {
       // 알림 종료
@@ -120,8 +121,8 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
       monitoringRef.current = null;
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (autoStopRef.current) clearTimeout(autoStopRef.current);
-      // notifee 대신 진동으로 종료 알림
       Vibration.vibrate(200);
+      open(`${item.routeno}번 알림이 해제됐어요`);
     } else {
       // 알림 시작
       setActiveAlarmId(item.routeid);
@@ -134,7 +135,7 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
         nodeid: stopInfo.nodeid,
         nodenm: stopInfo.nodenm,
       };
-
+  
       // 5분 뒤 자동 종료
       if (autoStopRef.current) clearTimeout(autoStopRef.current);
       autoStopRef.current = setTimeout(() => {
@@ -143,16 +144,17 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
         monitoringRef.current = null;
         lastArrtimeRef.current = null;
         if (intervalRef.current) clearInterval(intervalRef.current);
-        Vibration.vibrate([0, 300, 100, 300]); // 자동 종료 진동
+        Vibration.vibrate([0, 300, 100, 300]);
+        open('알림이 자동으로 종료됐어요');
       }, 5 * 60 * 1000);
-
-      Vibration.vibrate(300); // 시작 진동
+  
+      Vibration.vibrate(300);
+      open(`${item.routeno}번 버스 알림 시작! 정거장이 줄어들면 진동으로 알려드려요`);
     }
   };
-
   useEffect(() => {
     if (!activeAlarmId || !monitoringRef.current) return;
-
+  
     intervalRef.current = setInterval(async () => {
       const mon = monitoringRef.current;
       if (!mon) return;
@@ -162,18 +164,19 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
           mon.nodeid,
           mon.routeid,
         );
-
+  
         if (!result || result.length === 0) {
           setActiveAlarmId(null);
           monitoringRef.current = null;
           Vibration.vibrate([0, 200, 100, 200]);
+          open(`${mon.routeno}번 버스 도착 정보가 없어요`);
           return;
         }
-
-        const firstResult = result[0]!; // ! 로 undefined 아님을 명시
+  
+        const firstResult = result[0]!;
         const currentStops = firstResult.arrprevstationcnt;
         const currentArrtime = firstResult.arrtime ?? 9999;
-
+  
         // 버스 지나친 경우
         if (
           lastPrevCount !== null &&
@@ -183,25 +186,31 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
           setActiveAlarmId(null);
           monitoringRef.current = null;
           Vibration.vibrate([0, 500, 200, 500]);
+          open(`${mon.routeno}번 버스가 지나쳤어요`);
           return;
         }
-
-        // 정거장 줄어들었을 때 진동
-        if (lastPrevCount !== null && currentStops < lastPrevCount) {
+  
+        // 2정거장 이하일 때 토스트 + 강한 진동
+        if (currentStops <= 2) {
+          Vibration.vibrate([0, 500, 100, 500, 100, 500]);
+          open(`🚌 ${mon.routeno}번 버스가 ${currentStops}정거장 앞에 있어요!`);
+        } else if (lastPrevCount !== null && currentStops < lastPrevCount) {
+          // 정거장 줄어들었을 때 진동만
           Vibration.vibrate([0, 500, 100, 500]);
         }
-
+  
         setLastPrevCount(currentStops);
         lastArrtimeRef.current = currentArrtime;
       } catch (e) {
         console.error('Monitoring error:', e);
       }
     }, 30000);
-
+  
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [activeAlarmId, lastPrevCount]);
+
 
   useEffect(() => {
     loadFavorites();

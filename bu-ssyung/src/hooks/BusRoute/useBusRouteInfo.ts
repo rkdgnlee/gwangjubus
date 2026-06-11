@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { getBusRouteInfo } from '../../services/BusRoute/getBusRouteInfo';
+import { getBusRouteInfo } from '../../services/api-service-proxy'
 import { IBusRouteInfo } from '../../types/bus';
 
 

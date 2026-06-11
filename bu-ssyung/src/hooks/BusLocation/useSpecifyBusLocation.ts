@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { IBusLocation } from '../../types/bus';
-import { getSpecifyBusLocation } from '../../services/BusLocation/getSpecifyBusLocation';
-
+import { getSpecifyBusLocation } from '../../services/api-service-proxy'
 
 export const useSpecifyBusLocation = () => {
   const [locations, setLocations] = useState<IBusLocation[]>([]);

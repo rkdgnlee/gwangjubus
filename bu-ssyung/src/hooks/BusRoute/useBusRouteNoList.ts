@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { IBusRoute } from "../../types/bus";
-import { getBusRouteNoList } from '../../services/BusRoute/getBusRouteNoList';
+import { getBusRouteNoList } from '../../services/api-service-proxy'
 
 export const useBusRouteNoList = () => {
   const [routes, setRoutes] = useState<IBusRoute[]>([]);

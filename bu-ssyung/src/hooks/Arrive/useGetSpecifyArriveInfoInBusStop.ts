@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { getSpecifyArriveInfoInBusStop } from '../../services/Arrive/getSpecifyArriveInfoInBusStop';
+import { getSpecifyArriveInfoInBusStop } from '../../services/api-service-proxy'
 import { IArriveInBusStop } from '../../types/arrive';
 
 

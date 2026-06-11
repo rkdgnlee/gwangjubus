@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { IBusLocation } from '../../types/bus';
-import { getBusLocation } from '../../services/BusLocation/getBusLocation';
+import { getBusLocation } from '../../services/api-service-proxy'
 
 
 export const useBusLocation = () => {
