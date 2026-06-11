@@ -7,7 +7,7 @@ export const getBusRouteInfo = async (cityCode: number, routeId: string): Promis
       `${API_BUS_ROUTE_URL}/getRouteInfoIem?serviceKey=${PUBLIC_API_PRIVATE_KEY}&_type=json&cityCode=${cityCode}&routeId=${routeId}`
     );
     const data = await response.json();
-    const item = data.response.body.items.item;
+    const item = data.response.body.items?.item;
     return Array.isArray(item) ? item[0] : item;
   } catch (error) {
     console.error('Error fetching bus route info:', error);

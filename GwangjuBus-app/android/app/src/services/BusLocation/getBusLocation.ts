@@ -8,7 +8,7 @@ export const getBusLocation = async (cityCode: number, routeId: string): Promise
       `${API_BUS_LOCATION_URL}/getRouteAcctoBusLcList?serviceKey=${PUBLIC_API_PRIVATE_KEY}&_type=json&cityCode=${cityCode}&routeId=${routeId}`
     );
     const data = await response.json();
-    const item = data.response.body.items.item;
+    const item = data.response.body.items?.item;
 
     if (!item) return []; // ← 추가
     return Array.isArray(item) ? item : [item];

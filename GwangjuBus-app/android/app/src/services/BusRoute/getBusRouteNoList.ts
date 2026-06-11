@@ -8,7 +8,7 @@ export const getBusRouteNoList = async (cityCode: number, routeNo: string): Prom
     const response = await fetch(url);
     const data = await response.json();
     if (!data) return []; // ← null 반환
-    return data.response.body.items.item;
+    return data.response.body.items?.item;
   } catch (error) {
     console.error('Error fetching bus route info:', error);
     throw error;

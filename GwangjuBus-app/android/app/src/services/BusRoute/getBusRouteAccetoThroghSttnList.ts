@@ -8,7 +8,7 @@ export const getBusRouteAccetoThroghSttnList = async (cityCode: number, routeId:
       `${API_BUS_ROUTE_URL}/getRouteAcctoThrghSttnList?serviceKey=${PUBLIC_API_PRIVATE_KEY}&pageNo=1&numOfRows=100&_type=json&cityCode=${cityCode}&routeId=${routeId}`
     );
     const data = await response.json();
-    const item = data.response.body.items.item;
+    const item = data.response.body.items?.item;
     if (!item) return []; // ← 추가
     return Array.isArray(item) ? item : [item];
   } catch (error) {
