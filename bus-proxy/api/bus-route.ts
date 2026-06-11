@@ -4,7 +4,7 @@ const BASE_URL = 'https://apis.data.go.kr/1613000/BusRouteInfoInqireService';
 
 export default async function handler(req: Request) {
   const { searchParams } = new URL(req.url);
-  const endpoint = searchParams.get('endpoint'); // e.g. getRouteNoList
+  const endpoint = searchParams.get('endpoint');
   searchParams.delete('endpoint');
 
   if (!endpoint) {
@@ -12,11 +12,13 @@ export default async function handler(req: Request) {
   }
 
   const apiKey = process.env.PUBLIC_API_PRIVATE_KEY;
-  searchParams.set('serviceKey', apiKey!);
-  searchParams.set('_type', 'json');
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: 'API key not configured' }), { status: 500 });
+  }
 
   try {
-    const response = await fetch(`${BASE_URL}/${endpoint}?${searchParams.toString()}`);
+    const url = `${BASE_URL}/${endpoint}?serviceKey=${encodeURIComponent(apiKey)}&_type=json&${searchParams.toString()}`;
+    const response = await fetch(url);
     const data = await response.json();
 
     return new Response(JSON.stringify(data), {
@@ -25,11 +27,7 @@ export default async function handler(req: Request) {
         'Access-Control-Allow-Origin': '*',
       },
     });
-    } catch (error) {
-        return new Response(JSON.stringify({ 
-        error: 'Fetch failed',
-        message: String(error),  // ← 추가
-        url: `${BASE_URL}/${endpoint}`  // ← 추가
-        }), { status: 500 });
-    }
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Fetch failed', message: String(error) }), { status: 500 });
+  }
 }
