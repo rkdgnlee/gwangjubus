@@ -28,6 +28,11 @@ export default async function handler(req: Request) {
       },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: 'Fetch failed', message: String(error) }), { status: 500 });
+    return new Response(JSON.stringify({ 
+      error: 'Fetch failed', 
+      message: String(error),
+      apiKeyExists: !!process.env.PUBLIC_API_PRIVATE_KEY,  // ← 추가
+      apiKeyLength: process.env.PUBLIC_API_PRIVATE_KEY?.length ?? 0,  // ← 추가
+    }), { status: 500 });
   }
 }
