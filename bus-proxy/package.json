@@ -1,0 +1,7 @@
+{
+  "name": "bus-proxy",
+  "version": "1.0.0",
+  "devDependencies": {
+    "@types/node": "^25.9.3"
+  }
+}

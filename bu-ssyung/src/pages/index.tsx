@@ -19,12 +19,16 @@ function IndexPage() {
   }, []);
 
   const checkStorage = async () => {
-    const city = await storage.getCity();
-    const cityCode = await storage.getCityCode();
-    setSavedCity(city);
-    setSavedCityCode(Number(cityCode));
-    setIsLoading(false);
-  };
+  console.log('[checkStorage] 시작');
+  const city = await storage.getCity();
+  const cityCode = await storage.getCityCode();
+  console.log('[checkStorage] 가져온 값 - city:', city, '/ cityCode:', cityCode);
+  
+  setSavedCity(city);
+  setSavedCityCode(Number(cityCode));
+  setIsLoading(false);
+  console.log('[checkStorage] state 세팅 완료');
+};
 
   if (isLoading) {
     return (
@@ -41,6 +45,9 @@ function IndexPage() {
       onReset={() => setSavedCity(null)}
     />
   ) : (
-    <RegionSelectScreen onComplete={checkStorage} />
+    <RegionSelectScreen onComplete={(city, cityCode) => {
+      setSavedCity(city);
+      setSavedCityCode(cityCode);
+    }} />
   );
 }

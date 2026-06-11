@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { storage } from '../../utils/storage';
 import { COLORS } from '../../constants/theme';
+import { useToast } from '@toss/tds-react-native';
 
 const RAW = "세종특별시:12부산광역시:21대구광역시:22인천광역시:23광주광역시:24대전광역시/계룡시:25울산광역시:26제주도:39수원시:31010성남시:31020의정부시:31030안양시:31040부천시:31050광명시:31060평택시:31070동두천시:31080안산시:31090고양시:31100과천시:31110구리시:31120남양주시:31130오산시:31140시흥시:31150군포시:31160의왕시:31170하남시:31180용인시:31190파주시:31200이천시:31210안성시:31220김포시:31230화성시:31240광주시:31250양주시:31260포천시:31270여주시:31320연천군:31350가평군:31370양평군:31380춘천시:32010원주시/횡성군:32020태백시:32050홍천군:32310철원군:32360양양군:32410청주시:33010충주시:33020제천시:33030보은군:33320옥천군:33330영동군:33340진천군:33350괴산군:33360음성군:33370단양군:33380천안시:34010공주시:34020아산시:34040서산시:34050논산시:34060계룡시:34070부여군:34330당진시:34390전주시:35010군산시:35020익산시:35030정읍시:35040남원시:35050김제시:35060진안군:35320무주군:35330장수군:35340임실군:35350순창군:35360고창군:35370부안군:35380목포시:36010여수시:36020순천시:36030나주시:36040광양시:36060곡성군:36320구례군:36330고흥군:36350장흥군:36380해남군:36400영암군:36410무안군:36420함평군:36430장성군:36450완도군:36460진도군:36470신안군:36480포항시:37010경주시:37020김천시:37030안동시:37040구미시:37050영주시:37060영천시:37070상주시:37080문경시:37090경산시:37100의성군:37320청송군:37330영양군:37340영덕군:37350청도군:37360고령군:37370성주군:37380칠곡군:37390예천군:37400봉화군:37410울진군:37420울릉군:37430창원시:38010진주시:38030통영시:38050사천시:38060김해시:38070밀양시:38080거제시:38090양산시:38100의령군:38310함안군:38320창녕군:38330고성군:38340남해군:38350하동군:38360산청군:38370함양군:38380거창군:38390합천군:38400";
 
@@ -34,22 +35,18 @@ function parseRegionData(): RegionData {
 }
 
 interface RegionSelectProps {
-  onComplete: () => void;
+  onComplete: (city: string, cityCode: number) => void;
 }
+
 
 const RegionSelectScreen = ({ onComplete }: RegionSelectProps) => {
   const regionData = useMemo(() => parseRegionData(), []);
   const provinces = useMemo(() => {
     const keys = Object.keys(regionData);
-    // 광역시 및 특별시 목록 (그룹화 기준)
     const majorCities = ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종'];
-
-    // 1. 광역시/특별시 그룹 추출 및 정렬
     const cityGroup = keys
       .filter(name => majorCities.includes(name))
       .sort((a, b) => a.localeCompare(b, 'ko'));
-    
-    // 2. 나머지 '도' 그룹 추출 및 정렬
     const provinceGroup = keys
       .filter(name => !majorCities.includes(name))
       .sort((a, b) => a.localeCompare(b, 'ko'));
@@ -68,12 +65,13 @@ const RegionSelectScreen = ({ onComplete }: RegionSelectProps) => {
   const handleCitySelect = (city: CityItem) => {
     setSelectedCity(city);
   };
-
+  const { open } = useToast();
   const handleConfirm = async () => {
     if (!selectedCity) return;
     await storage.setCity(selectedCity.name);
     await storage.setCityCode(selectedCity.code);
-    onComplete(); // Alert 제거하고 바로 이동
+    onComplete(selectedCity.name, Number(selectedCity.code)); // 값 직접 전달
+    open ("저장됐습니다!")
   };
 
   const cities = selectedProv ? regionData[selectedProv] : [];
