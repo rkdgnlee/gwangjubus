@@ -17,7 +17,7 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const url = `${BASE_URL}/${endpoint}?serviceKey=${encodeURIComponent(apiKey)}&_type=json&${searchParams.toString()}`;
+    const url = `${BASE_URL}/${endpoint}?serviceKey=${apiKey}&_type=json&${searchParams.toString()}`;
     const response = await fetch(url);
     const data = await response.json();
 
