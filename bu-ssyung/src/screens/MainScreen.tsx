@@ -14,8 +14,8 @@ import SettingsContainer from './Settings/SettingsContainer'; // 기존 경로�
 import { favoriteStorage } from '../utils/favoriteStorage'; // 기존 경로에 맞게 수정
 import { IFavoriteBus } from '../types/favorite'; // 기존 경로에 맞게 수정
 import { COLORS } from '../constants/theme';
-import { getSpecifyArriveInfoInBusStop } from '../services/Arrive/getSpecifyArriveInfoInBusStop';
 import { useToast } from '@toss/tds-react-native';
+import { getSpecifyArriveInfoInBusStop } from '../services/api-service-proxy';
 
 interface MainProps {
   cityName: string;
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
   contentArea: { flex: 1 },
   bottomNav: {
     flexDirection: 'row',
-    height: 60,
+    height: 64,
     backgroundColor: COLORS.text.white,
     alignItems: 'center',
     justifyContent: 'space-around',

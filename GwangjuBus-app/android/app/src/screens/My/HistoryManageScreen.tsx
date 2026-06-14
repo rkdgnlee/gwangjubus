@@ -4,7 +4,7 @@ import {
   View, Text, StyleSheet, FlatList,
   TouchableOpacity, Alert
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Storage } from '@apps-in-toss/framework';
 import { busHistoryStorage } from '../../utils/busHistoryStorage';
 import { IBusRideHistory } from '../../types/IBusRideHistory';
 import { COLORS } from '../../constants/theme';

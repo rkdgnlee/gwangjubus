@@ -1,12 +1,11 @@
-// utils/busHistoryStorage.ts
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Storage } from '@apps-in-toss/framework';
 import { IBusRideHistory } from '../types/IBusRideHistory';
 
 const KEY = 'bus_ride_history';
 
 export const busHistoryStorage = {
   getAll: async (): Promise<IBusRideHistory[]> => {
-    const raw = await AsyncStorage.getItem(KEY);
+    const raw = await Storage.getItem(KEY);
     return raw ? JSON.parse(raw) : [];
   },
 
@@ -17,7 +16,7 @@ export const busHistoryStorage = {
       id: `${Date.now()}-${Math.random()}`,
       arrivedAt: new Date().toISOString(),
     };
-    await AsyncStorage.setItem(KEY, JSON.stringify([newEntry, ...all]));
+    await Storage.setItem(KEY, JSON.stringify([newEntry, ...all]));
     return newEntry;
   },
 
@@ -29,11 +28,11 @@ export const busHistoryStorage = {
   remove: async (id: string) => {
     const all = await busHistoryStorage.getAll();
     const filtered = all.filter(h => h.id !== id);
-    await AsyncStorage.setItem(KEY, JSON.stringify(filtered));
+    await Storage.setItem(KEY, JSON.stringify(filtered));
   },
 
   removeAll: async () => {
-    await AsyncStorage.removeItem(KEY);
+    await Storage.removeItem(KEY);
   },
 
 };

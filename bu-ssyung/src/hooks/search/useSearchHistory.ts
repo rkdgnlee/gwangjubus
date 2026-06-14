@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Storage } from '@apps-in-toss/framework';
 
 export interface ISearchHistory {
   query: string;
@@ -20,7 +20,7 @@ export const useSearchHistory = (mode: 'bus' | 'stop') => {
   // 불러오기 + 6개월 지난 것 자동 삭제
   const loadHistory = useCallback(async () => {
     try {
-      const raw = await AsyncStorage.getItem(KEYS[mode]);
+      const raw = await Storage.getItem(KEYS[mode]);
       if (!raw) return;
       const parsed: ISearchHistory[] = JSON.parse(raw);
       if (!Array.isArray(parsed)) throw new Error('Invalid data format');
@@ -29,7 +29,7 @@ export const useSearchHistory = (mode: 'bus' | 'stop') => {
       const filtered = parsed.filter(h => now - h.timestamp < SIX_MONTHS_MS);
       setHistory(filtered);
       if (filtered.length !== parsed.length) {
-        await AsyncStorage.setItem(KEYS[mode], JSON.stringify(filtered));
+        await Storage.setItem(KEYS[mode], JSON.stringify(filtered));
       }
     } catch (e) {
       console.error('loadHistory error:', e);
@@ -44,12 +44,12 @@ export const useSearchHistory = (mode: 'bus' | 'stop') => {
   const addHistory = useCallback(async (query: string) => {
     if (!query.trim()) return;
     try {
-      const raw = await AsyncStorage.getItem(KEYS[mode]);
+      const raw = await Storage.getItem(KEYS[mode]);
       const prev: ISearchHistory[] = raw ? JSON.parse(raw) : [];
       // 중복 제거 후 최신순 앞에 추가
       const deduped = prev.filter(h => h.query !== query);
       const next = [{ query, timestamp: Date.now() }, ...deduped].slice(0, MAX_COUNT);
-      await AsyncStorage.setItem(KEYS[mode], JSON.stringify(next));
+      await Storage.setItem(KEYS[mode], JSON.stringify(next));
       setHistory(next);
     } catch (e) {
       console.error('addHistory error:', e);
@@ -59,7 +59,7 @@ export const useSearchHistory = (mode: 'bus' | 'stop') => {
   // 전체 삭제
   const clearHistory = useCallback(async () => {
     try {
-      await AsyncStorage.removeItem(KEYS[mode]);
+      await Storage.removeItem(KEYS[mode]);
       setHistory([]);
     } catch (e) {
       console.error('clearHistory error:', e);
@@ -70,7 +70,7 @@ export const useSearchHistory = (mode: 'bus' | 'stop') => {
   const removeHistory = useCallback(async (query: string) => {
     try {
       const next = history.filter(h => h.query !== query);
-      await AsyncStorage.setItem(KEYS[mode], JSON.stringify(next));
+      await Storage.setItem(KEYS[mode], JSON.stringify(next));
       setHistory(next);
     } catch (e) {
       console.error('removeHistory error:', e);

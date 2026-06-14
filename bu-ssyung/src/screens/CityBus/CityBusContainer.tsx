@@ -8,6 +8,8 @@ import { useBusRouteNoList } from '../../hooks/BusRoute/useBusRouteNoList';
 import { useBusStopNoList } from '../../hooks/BusStop/useBusStopNoList';
 import { useSearchHistory } from '../../hooks/search/useSearchHistory';
 import { COLORS } from '../../constants/theme';
+import { useTicket } from '../../hooks/ticket/useTicket';
+import { AdComponent } from '../../components/ads/AdComponent';
 
 interface Props {
   cityName: string;
@@ -21,13 +23,18 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
   const [searchMode, setSearchMode] = useState<'bus' | 'stop'>('bus');
   const [searchText, setSearchText] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
-  // initialData가 있으면 스택을 해당 화면으로 시작, 없으면 빈 스택(검색창)으로 시작
   const [navStack, setNavStack] = useState<any[]>(
     initialData ? [{ screen: initialData.type, data: initialData.data }] : []
   );
+  const [pendingScreen, setPendingScreen] = useState<{ screen: 'bus' | 'stop', data: any } | null>(null);
+  const [showAdPhase, setShowAdPhase] = useState(false);
+
   const { routes, loading: busLoading, search: searchBus, reset: resetBus } = useBusRouteNoList();
   const { stops, loading: stopLoading, search: searchStop, reset: resetStop } = useBusStopNoList();
 
+  // ← 컴포넌트 안으로 이동
+  const { consumeTicket, rewardTickets, tickets, showWarn, dismissWarn } = useTicket();
+  const [showTicketTooltip, setShowTicketTooltip] = useState(false);
   const {
     history: busHistory,
     addHistory: addBusHistory,
@@ -42,7 +49,6 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
     removeHistory: removeStopHistory,
   } = useSearchHistory('stop');
 
-  // 현재 모드에 맞는 것만 사용
   const history = searchMode === 'bus' ? busHistory : stopHistory;
   const addHistory = searchMode === 'bus' ? addBusHistory : addStopHistory;
   const clearHistory = searchMode === 'bus' ? clearBusHistory : clearStopHistory;
@@ -50,15 +56,12 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
 
   useEffect(() => {
     if (initialData) {
-      // 즐겨찾기로 진입 시 기존 검색 상태 초기화
       setSearchText('');
       setHasSearched(false);
-      // 스택을 즐겨찾기 화면으로 교체
       setNavStack([{ screen: initialData.type, data: initialData.data }]);
     }
   }, [initialData]);
 
-  // 모드 전환 시 초기화
   const handleModeChange = (mode: 'bus' | 'stop') => {
     setSearchMode(mode);
     setSearchText('');
@@ -67,8 +70,24 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
     resetStop();
   };
 
-  const pushScreen = (screen: 'bus' | 'stop', data: any) => {
+  const pushScreen = async (screen: 'bus' | 'stop', data: any) => {
+    const ok = await consumeTicket();
+    if (!ok) {
+      // 티켓 0 → 광고 전체화면
+      setPendingScreen({ screen, data });
+      setShowAdPhase(true);
+      return;
+    }
     setNavStack(prev => [...prev, { screen, data }]);
+  };
+
+  const handleAdReward = async () => {
+    await rewardTickets();
+    setShowAdPhase(false);
+    if (pendingScreen) {
+      setNavStack(prev => [...prev, pendingScreen]);
+      setPendingScreen(null);
+    }
   };
 
   const popScreen = () => {
@@ -87,6 +106,17 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
     }
   }, [searchText, searchMode, cityCode]);
 
+  // 광고 전체화면
+  if (showAdPhase) {
+    return (
+      <AdComponent
+        tickets={tickets ?? 0}
+        onReward={handleAdReward}
+        onClose={() => setShowAdPhase(false)}
+      />
+    );
+  }
+
   // 상세 화면
   const currentScreen = navStack[navStack.length - 1];
   if (currentScreen) {
@@ -98,7 +128,7 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
           cityCode={cityCode}
           onBack={popScreen}
           onStopPress={(stop) => pushScreen('stop', stop)}
-          targetNodeId={currentScreen.data.fromNodeId} // ← 추가
+          targetNodeId={currentScreen.data.fromNodeId}
         />
       );
     } else {
@@ -120,25 +150,41 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerTitle}>통합 검색</Text>
 
       {/* 모드 토글 */}
       <View style={styles.toggleContainer}>
+        <View style={styles.toggleButtons}>
+          <TouchableOpacity
+            style={[styles.toggleBtn, searchMode === 'bus' && styles.toggleBtnActive]}
+            onPress={() => handleModeChange('bus')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.toggleText, searchMode === 'bus' && styles.toggleTextActive]}>버스 검색</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.toggleBtn, searchMode === 'stop' && styles.toggleBtnActive]}
+            onPress={() => handleModeChange('stop')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.toggleText, searchMode === 'stop' && styles.toggleTextActive]}>정류장 검색</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 티켓 카운트 */}
         <TouchableOpacity
-          style={[styles.toggleBtn, searchMode === 'bus' && styles.toggleBtnActive]}
-          onPress={() => handleModeChange('bus')}
-          activeOpacity={0.8}
+          onPress={() => setShowTicketTooltip(prev => !prev)}
+          style={styles.ticketBadge}
+          activeOpacity={0.7}
         >
-          <Text style={[styles.toggleText, searchMode === 'bus' && styles.toggleTextActive]}>버스 검색</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.toggleBtn, searchMode === 'stop' && styles.toggleBtnActive]}
-          onPress={() => handleModeChange('stop')}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.toggleText, searchMode === 'stop' && styles.toggleTextActive]}>정류장 검색</Text>
+          <Text style={styles.ticketText}>🎟️ {tickets ?? 0}</Text>
+          {showTicketTooltip && (
+            <View style={styles.tooltip}>
+              <Text style={styles.tooltipText}>검색 결과 선택 시{'\n'}티켓 1개가 소모돼요</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
+      
 
       {/* 검색창 */}
       <SearchBar
@@ -146,6 +192,15 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
         onChangeText={setSearchText}
         onSearch={() => handleSearch()}
       />
+
+      {/* 30회 이하 경고 배너 */}
+      {showWarn && hasSearched && (
+        <AdComponent
+          tickets={tickets ?? 0}
+          onReward={rewardTickets}
+          onClose={dismissWarn}
+        />
+      )}
 
       {/* 결과 or 검색기록 */}
       <View style={{ flex: 1 }}>
@@ -162,7 +217,6 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
             onPressItem={(item) => pushScreen(searchMode, item)}
           />
         ) : (
-          // 검색 전 - 검색기록 표시
           <View style={styles.historyContainer}>
             <View style={styles.historyHeader}>
               <Text style={styles.historyTitle}>최근 검색</Text>
@@ -203,20 +257,47 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: COLORS.text.main,
-    marginBottom: 15,
-    marginTop: 24,
-    marginLeft: 20,
-  },
   toggleContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 15,
-    paddingTop: 25,
+    paddingTop: 15,
     paddingBottom: 15,
     backgroundColor: COLORS.text.white,
+  },
+  toggleButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  ticketBadge: {
+    position: 'relative',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: COLORS.background,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  ticketText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.text.main,
+  },
+  tooltip: {
+    position: 'absolute',
+    top: 36,
+    right: 0,
+    backgroundColor: COLORS.text.main,
+    borderRadius: 8,
+    padding: 10,
+    width: 160,
+    zIndex: 999,
+  },
+  tooltipText: {
+    fontSize: 12,
+    color: COLORS.text.white,
+    lineHeight: 18,
   },
   toggleBtn: {
     marginRight: 10,

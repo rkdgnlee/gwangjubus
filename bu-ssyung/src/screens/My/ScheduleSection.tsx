@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { IBusRideHistory } from '../../types/IBusRideHistory';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Storage } from '@apps-in-toss/framework';
 import { COLORS } from '../../constants/theme';
 import { busHistoryStorage } from '../../utils/busHistoryStorage';
 
@@ -36,14 +36,14 @@ const ScheduleSection = ({ onNavigate }: Props) => {
 
       // 기록이 있고 안내를 아직 안 봤으면 표시
       if (data.length > 0) {
-        const noticed = await AsyncStorage.getItem('storage_notice_seen');
+        const noticed = await Storage.getItem('storage_notice_seen');
         if (!noticed) setShowStorageNotice(true);
       }
     };
     load();
   }, []);
   const dismissNotice = async () => {
-    await AsyncStorage.setItem('storage_notice_seen', 'true');
+    await Storage.setItem('storage_notice_seen', 'true');
     setShowStorageNotice(false);
   };
   if (history.length === 0) {

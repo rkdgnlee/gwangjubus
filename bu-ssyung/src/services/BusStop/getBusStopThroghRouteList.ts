@@ -3,7 +3,7 @@ import { IStopThroghBusRoute } from '../../types/stop';
 export const getBusStopThroghRouteList = async (
   cityCode: number,
   nodeid: string,
-  numOfRows: number = 50
+  numOfRows: number = 30
 ): Promise<IStopThroghBusRoute[]> => {
   const PUBLIC_API_PRIVATE_KEY = import.meta.env.PUBLIC_API_PRIVATE_KEY;
   const API_STOP_URL = import.meta.env.API_STOP_URL;

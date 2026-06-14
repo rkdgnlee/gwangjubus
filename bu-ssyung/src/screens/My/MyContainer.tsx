@@ -31,8 +31,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  topSection: { flex: 0.55 },
-  bottomSection: { flex: 0.45 },
+  topSection: { flex: 0.50 },
+  bottomSection: { flex: 0.50 },
 });
 
 export default MyContainer;

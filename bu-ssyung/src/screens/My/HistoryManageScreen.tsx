@@ -4,7 +4,7 @@ import {
   View, Text, StyleSheet, FlatList,
   TouchableOpacity, Alert
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Storage } from '@apps-in-toss/framework';
 import { IBusRideHistory } from '../../types/IBusRideHistory';
 import { COLORS } from '../../constants/theme';
 import { busHistoryStorage } from '../../utils/busHistoryStorage';
@@ -71,7 +71,7 @@ const HistoryManageScreen = ({ onBack }: Props) => {
           onPress: async () => {
             await busHistoryStorage.removeAll();
             // 안내 배너도 초기화 (다시 보여주기)
-            await AsyncStorage.removeItem('storage_notice_seen');
+            await Storage.removeItem('storage_notice_seen');
             load();
           },
         },

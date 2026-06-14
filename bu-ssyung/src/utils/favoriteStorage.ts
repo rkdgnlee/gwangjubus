@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Storage } from '@apps-in-toss/framework';
 import { IFavoriteBus } from '../types/favorite';
 
 const FAVORITES_KEY = '@bus_favorites';
@@ -6,7 +6,7 @@ const FAVORITES_KEY = '@bus_favorites';
 export const favoriteStorage = {
   // 전체 즐겨찾기 가져오기
   getFavorites: async (): Promise<IFavoriteBus[]> => {
-    const json = await AsyncStorage.getItem(FAVORITES_KEY);
+    const json = await Storage.getItem(FAVORITES_KEY);
     return json ? JSON.parse(json) : [];
   },
 
@@ -17,7 +17,7 @@ export const favoriteStorage = {
     const isExist = list.some(item => item.id === newItem.id);
     if (!isExist) {
       const newList = [newItem, ...list];
-      await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(newList));
+      await Storage.setItem(FAVORITES_KEY, JSON.stringify(newList));
     }
   },
 
@@ -25,6 +25,6 @@ export const favoriteStorage = {
   removeFavorite: async (id: string) => {
     const list = await favoriteStorage.getFavorites();
     const newList = list.filter(item => item.id !== id);
-    await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(newList));
+    await Storage.setItem(FAVORITES_KEY, JSON.stringify(newList));
   }
 };

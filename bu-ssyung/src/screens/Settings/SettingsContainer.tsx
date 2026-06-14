@@ -4,6 +4,7 @@ import { storage } from '../../utils/storage';
 import HistoryManageScreen from '../My/HistoryManageScreen';
 import { COLORS } from '../../constants/theme';
 import { version } from '../../../package.json';
+import { requestReview } from '@apps-in-toss/framework';
 
 interface SettingsProps {
   cityName: string;
@@ -34,23 +35,12 @@ const SettingsContainer = ({ onChangeRegion }: SettingsProps) => {
     ]);
   };
 
-  const handleRating = () => {
-    // TODO: 실제 출시 후 발급받은 패키지명과 앱 아이디로 교체하세요.
-    const GOOGLE_PACKAGE_NAME = 'com.sardinespicysalad.gwangjubus'; 
-    const APPLE_APP_ID = '1234567890'; 
-
-    const url = Platform.OS === 'android'
-      ? `market://details?id=${GOOGLE_PACKAGE_NAME}`
-      : `itms-apps://itunes.apple.com/app/id${APPLE_APP_ID}?action=write-review`;
-
-    Linking.openURL(url).catch(() => {
-      // 스토어 앱을 열 수 없는 경우 브라우저로 연결
-      const webUrl = Platform.OS === 'android'
-        ? `https://play.google.com/store/apps/details?id=${GOOGLE_PACKAGE_NAME}`
-        : `https://apps.apple.com/app/id${APPLE_APP_ID}`;
-      
-      Linking.openURL(webUrl);
-    });
+  const handleRating = async () => {
+    try {
+      await requestReview();
+    } catch (error) {
+      console.error('리뷰 요청 실패:', error);
+    }
   };
 
   const handleFeedback = () => {
@@ -79,8 +69,8 @@ const SettingsContainer = ({ onChangeRegion }: SettingsProps) => {
           <Text style={styles.avatarText}>🗓️</Text>
         </View>
         <View style={styles.profileInfo}>
-          <Text style={styles.featureTitle}>나만의 버스 타임라인</Text>
-          <Text style={styles.featureDesc}>버스 탑승 기록을 저장하고{"\n"}나만의 이동 로그를 확인해 보세요 (준비 중)</Text>
+          <Text style={styles.featureTitle}>버쓩-전국 시내 버스</Text>
+          <Text style={styles.featureDesc}>내 기록을 저장하고{"\n"}나만의 버스 기록을 저장해보세요</Text>
         </View>
       </TouchableOpacity>
 
@@ -159,7 +149,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingStart: 24,
     paddingEnd: 24,
-    paddingTop: 64,
+    paddingTop: 24,
     paddingBottom: 24,
     backgroundColor: COLORS.text.white,
   },

@@ -10,7 +10,7 @@ export default defineConfig({
       brand: {
         displayName: '버쓩',
         primaryColor: '#3182F6',
-        icon: '',
+        icon: 'https://static.toss.im/appsintoss/39707/c6320194-2d5b-453e-9d61-27b12cd0d8b0.png',
       },
       permissions: [],
     }),

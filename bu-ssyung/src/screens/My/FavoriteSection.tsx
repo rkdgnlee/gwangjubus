@@ -76,8 +76,8 @@ const FavoriteSection = ({ onNavigate }: Props) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
-  headerTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 15, marginTop: 24 },
+  container: { flex: 1, paddingHorizontal: 20, paddingTop: 10 },
+  headerTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 15, marginTop: 10 },
   listContent: { paddingBottom: 10 },
   row: { justifyContent: 'space-between', marginBottom: 12 },
   card: {

@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
-import { getBusStopNoList } from '../../services/api-service-proxy'
-import { getBusStopThroghRouteList } from '../../services/BusStop/getBusStopThroghRouteList';
+import { getBusStopNoList, getBusStopThroghRouteList } from '../../services/api-service-proxy'
 import { IStop, IStopThroghBusRoute } from '../../types/stop';
 
 export interface IStopWithRoutes extends IStop {

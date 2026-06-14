@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Storage } from '@apps-in-toss/framework';
 import { IFavorite, IFavoriteBus, IFavoriteStop } from '../../types/favorite';
 
 const STORAGE_KEY = 'favorites_v2';
@@ -9,7 +9,7 @@ export const useFavorites = () => {
 
   const load = useCallback(async () => {
     try {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      const raw = await Storage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
@@ -27,7 +27,7 @@ export const useFavorites = () => {
 
   const save = async (next: IFavorite[]) => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      await Storage.setItem(STORAGE_KEY, JSON.stringify(next));
       setFavorites(next);
     } catch (e) {
       console.error('save favorites error:', e);

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { busHistoryStorage } from '../../utils/busHistoryStorage';
 import { IBusRideHistory } from '../../types/IBusRideHistory';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Storage } from '@apps-in-toss/framework';
 import { COLORS } from '../../constants/theme';
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
