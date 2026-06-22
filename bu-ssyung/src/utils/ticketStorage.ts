@@ -1,9 +1,9 @@
 import { Storage } from '@apps-in-toss/framework';
 
 const TICKET_KEY = 'search_ticket_count';
-const INITIAL_TICKETS = 150;
-const AD_REWARD_TICKETS = 100; // 광고 1회 시청 시 충전량 (추후 조정)
-const WARN_THRESHOLD = 30; // 경고 표시 기준
+const INITIAL_TICKETS = 100;
+const AD_REWARD_TICKETS = 75; // 광고 1회 시청 시 충전량 (추후 조정)
+const WARN_THRESHOLD = 10; // 경고 표시 기준
 
 export const ticketStorage = {
   // 현재 티켓 수 가져오기 (없으면 초기값 200으로 세팅)

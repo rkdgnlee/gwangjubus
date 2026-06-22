@@ -10,7 +10,6 @@ import { useFavorites } from '../../hooks/favorites/useFavorites';
 import SaveModal from '../../components/SaveModal';
 import MenuBottomSheet from '../../components/MenuBottomSheet';
 import { COLORS } from '../../constants/theme';
-import { Bell, Info } from 'lucide-react-native';
 import { busHistoryStorage } from '../../utils/busHistoryStorage';
 
 const formatArrTime = (seconds: number): string => {
@@ -194,9 +193,9 @@ const BusStopDetail = ({ stopInfo, cityName, cityCode, onBack, onBusPress, activ
                     onPress={() => onToggleAlarm?.(item, stopInfo, cityCode)}
                   >
                     {activeAlarmId === item.routeid ? (
-                      <Bell size={20} color={COLORS.primary} fill={COLORS.primary} />
+                      <Text style={{ fontSize: 18 }}>🔔</Text>
                     ) : (
-                      <Bell size={20} color={COLORS.text.muted} />
+                      <Text style={{ fontSize: 18, opacity: 0.4 }}>🔔</Text>
                     )}
                   </TouchableOpacity>
                   <View style={[
@@ -256,7 +255,7 @@ const BusStopDetail = ({ stopInfo, cityName, cityCode, onBack, onBusPress, activ
 
       {showGuide && (
         <View style={styles.guideBox}>
-          <Info size={16} color={COLORS.text.hint} />
+          <Text style={{ fontSize: 14, color: COLORS.text.hint }}>ℹ️</Text>
           <Text style={styles.guideText}>종 모양 아이콘을 누르면 도착 알림을 받을 수 있어요.</Text>
           <TouchableOpacity onPress={() => setShowGuide(false)}><Text style={styles.guideClose}>✕</Text></TouchableOpacity>
         </View>

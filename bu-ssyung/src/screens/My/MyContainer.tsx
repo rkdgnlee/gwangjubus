@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-// '../' 대신 './' 를 사용해야 합니다.
 import FavoriteSection from './FavoriteSection'; 
 import ScheduleSection from './ScheduleSection';
 import { COLORS } from '../../constants/theme';

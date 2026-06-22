@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { COLORS } from '../../constants/theme';
 
-const AD_GROUP_ID = 'ait.v2.live.e64e09ffed344652'; // ← 새로 발급받은 ID로 교체
+const AD_GROUP_ID = 'ait.v2.live.bcccc1f2d86244b7'; // ← 새로 발급받은 ID로 교체
 const IS_DEV = __DEV__;
 
 interface AdComponentProps {
@@ -91,7 +91,7 @@ export const AdComponent = ({ tickets, onReward, onClose }: AdComponentProps) =>
     <View style={styles.banner}>
       <View style={styles.textArea}>
         <Text style={styles.title}>검색 횟수가 {tickets}회 남았어요</Text>
-        <Text style={styles.sub}>광고를 보면 100회 충전돼요</Text>
+        <Text style={styles.sub}>광고를 보면 50회 충전돼요</Text>
       </View>
       <TouchableOpacity
         style={[styles.adButton, !isAdLoaded && styles.adButtonDisabled]}

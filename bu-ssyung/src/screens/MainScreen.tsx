@@ -16,6 +16,10 @@ import { IFavoriteBus } from '../types/favorite'; // 기존 경로에 맞게 수
 import { COLORS } from '../constants/theme';
 import { useToast } from '@toss/tds-react-native';
 import { getSpecifyArriveInfoInBusStop } from '../services/api-service-proxy';
+import { TossBanner } from '../components/ads/TossBanner';
+import { useTicket } from '../hooks/ticket/useTicket';
+import { AdComponent } from '../components/ads/AdComponent';
+import { HomeAddTooltip } from '../components/HomeAddTooltip';
 
 interface MainProps {
   cityName: string;
@@ -112,6 +116,12 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastArrtimeRef = useRef<number | null>(null);
   const autoStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ticket
+  const { consumeTicket, rewardTickets, tickets } = useTicket();
+  const [pendingFavorite, setPendingFavorite] = useState<{ type: 'bus' | 'stop', data: any } | null>(null);
+  const [showAdPhase, setShowAdPhase] = useState(false);
+
   const { open } = useToast();
   const onToggleAlarm = (item: any, stopInfo: any, cityCode: number) => {
     if (activeAlarmId === item.routeid) {
@@ -221,15 +231,45 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
     setFavorites(data);
   };
 
-  const handleNavigationRequest = (type: 'bus' | 'stop', data: any) => {
+  const handleNavigationRequest = async (type: 'bus' | 'stop', data: any) => {
+    const ok = await consumeTicket();
+    if (!ok) {
+      // 티켓 0 → 광고 전체화면 표시
+      setPendingFavorite({ type, data });
+      setShowAdPhase(true);
+      return;
+    }
     setCityBusInitData({ type, data });
     setActiveTab('CityBus');
   };
 
+  const handleAdReward = async () => {
+    await rewardTickets();
+    setShowAdPhase(false);
+    if (pendingFavorite) {
+      setCityBusInitData(pendingFavorite);
+      setActiveTab('CityBus');
+      setPendingFavorite(null);
+    }
+  };
+  if (showAdPhase) {
+    return (
+      <AdComponent
+        tickets={tickets ?? 0}
+        onReward={handleAdReward}
+        onClose={() => setShowAdPhase(false)}
+      />
+    );
+  }
   const renderContent = () => {
     switch (activeTab) {
       case 'My':
-        return <MyContainer onNavigate={handleNavigationRequest} />;
+        return (
+          <View style={{ flex: 1 }}>
+            <MyContainer onNavigate={handleNavigationRequest} />
+            <HomeAddTooltip />
+          </View>
+        );
       case 'CityBus':
         return (
           <CityBusContainer
@@ -251,6 +291,9 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
   return (
     <View style={styles.container}>
       <View style={styles.contentArea}>{renderContent()}</View>
+      <View style={{ width: '100%' }}>
+        <TossBanner />
+      </View>
       <View style={styles.bottomNav}>
         {(['My', 'CityBus', 'Settings'] as TabType[]).map(tab => (
           <TabButton
@@ -269,6 +312,7 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
           />
         ))}
       </View>
+      
     </View>
   );
 };

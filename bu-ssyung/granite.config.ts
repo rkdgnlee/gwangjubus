@@ -8,8 +8,8 @@ export default defineConfig({
   plugins: [
     appsInToss({
       brand: {
-        displayName: '버쓩',
-        primaryColor: '#3182F6',
+        displayName: '버쓩:전국 시내 버스',
+        primaryColor: '#2197FC',
         icon: 'https://static.toss.im/appsintoss/39707/c6320194-2d5b-453e-9d61-27b12cd0d8b0.png',
       },
       permissions: [],
