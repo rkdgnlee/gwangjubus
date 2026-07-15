@@ -1,8 +1,11 @@
+// FavoriteSection.tsx
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Platform, Alert } from 'react-native';
 import { IFavorite, IFavoriteStop, IFavoriteBus } from '../../types/favorite';
 import { useFavorites } from '../../hooks/favorites/useFavorites';
 import { COLORS } from '../../constants/theme';
+import { useTicket } from '../../hooks/ticket/useTicket';
+import { useFullScreenAd } from '../../hooks/ticket/useFullScreenAd';
 
 interface Props {
   onNavigate: (type: 'bus' | 'stop', data: any) => void;
@@ -10,10 +13,36 @@ interface Props {
 
 const FavoriteSection = ({ onNavigate }: Props) => {
   const { favorites, load } = useFavorites();
+  const { consumeTicket, rewardTickets, tickets, showWarn, dismissWarn } = useTicket();
+  const { isAdLoading, showAd } = useFullScreenAd(); // 👈 2. 광고 상태 가져오기
 
   React.useEffect(() => { load(); }, []);
 
-  const handlePress = (item: IFavorite) => {
+  const handlePress = async (item: IFavorite) => {
+    const hasTicket = await consumeTicket();
+    
+    if (!hasTicket) {
+      Alert.alert(
+        '티켓 부족', 
+        '보유하신 티켓이 없습니다. 광고를 보고 충전할까요?', 
+        [
+          { text: '취소', style: 'cancel' },
+          { 
+            text: '광고 보고 충전', 
+            // 👈 3. 얼럿 내 충전 시에도 백그라운드 로드된 광고가 있다면 바로 띄워줌
+            onPress: () => {
+              if (isAdLoading) {
+                showAd(rewardTickets);
+              } else {
+                Alert.alert('잠시만 기다려주세요', '광고를 불러오는 중입니다.');
+              }
+            } 
+          }
+        ]
+      );
+      return; 
+    }
+
     if (item.type === 'stop') {
       const s = item as IFavoriteStop;
       onNavigate('stop', { nodeid: s.nodeid, nodenm: s.nodenm, nodeno: s.nodeno });
@@ -44,6 +73,33 @@ const FavoriteSection = ({ onNavigate }: Props) => {
 
   return (
     <View style={styles.container}>
+      {/* ⚠️ 경고 배너 */}
+      {showWarn && (
+        <View style={styles.warnBanner}>
+          <Text style={styles.warnText} numberOfLines={1}>
+            💡 남은 티켓이 {tickets ?? 10}개 남았어요!
+          </Text>
+          
+          {/* 👈 4. 우측에 [광고 보기], [닫기] 버튼 나열 */}
+          <View style={styles.warnButtonsContainer}>
+            {/* 🌟 변경된 핵심 코드: 클릭 전엔 활성화 상태이며, 누르면 로딩 중으로 변합니다. */}
+            <TouchableOpacity 
+              style={[styles.warnAdBtn, isAdLoading && styles.warnAdBtnDisabled]} 
+              disabled={isAdLoading}
+              onPress={() => showAd(rewardTickets)}
+            >
+              <Text style={[styles.warnAdBtnText, isAdLoading && styles.warnAdBtnTextDisabled]}>
+                {isAdLoading ? '로딩 중...' : '광고 보기'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={dismissWarn} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>닫기</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       <Text style={styles.headerTitle}>저장</Text>
       <FlatList
         data={[...favorites].sort((a, b) => b.savedAt - a.savedAt)}
@@ -77,15 +133,53 @@ const FavoriteSection = ({ onNavigate }: Props) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 10 },
+  
+  // 경고 배너 스타일
+  warnBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FFEAEA',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#FFD1D1'
+  },
+  warnText: { color: '#D32F2F', fontSize: 13, fontWeight: '600', flex: 1 },
+  
+  // 👈 5. 배너 우측 버튼 영역 스타일 추가
+  warnButtonsContainer: { flexDirection: 'row', alignItems: 'center' },
+  warnAdBtn: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginRight: 6,
+  },
+  warnAdBtnDisabled: {
+    backgroundColor: COLORS.border,
+  },
+  warnAdBtnText: {
+    color: COLORS.text.white,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  warnAdBtnTextDisabled: {
+    color: COLORS.text.muted,
+  },
+  closeButton: { paddingHorizontal: 8, paddingVertical: 6 },
+  closeButtonText: { color: '#888', fontSize: 13, fontWeight: '500' },
+
   headerTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 15, marginTop: 10 },
   listContent: { paddingBottom: 10 },
   row: { justifyContent: 'space-between', marginBottom: 12 },
   card: {
     backgroundColor: COLORS.text.white,
     borderRadius: 16,
-    paddingHorizontal: 12, // 좌우 여백을 균일하게
-    paddingTop: Platform.OS === 'ios' ? 12 : 8,         // 상단 패딩 축소 (기존 10)
-    paddingBottom: Platform.OS === 'ios' ? 12 : 8,      // 하단 패딩 조정
+    paddingHorizontal: 12,
+    paddingTop: Platform.OS === 'ios' ? 12 : 8,
+    paddingBottom: Platform.OS === 'ios' ? 12 : 8,
     width: '48%',
     aspectRatio: 4 / 3,
     elevation: 1, shadowColor: '#000', shadowOpacity: 0.05,

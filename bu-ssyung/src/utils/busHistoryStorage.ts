@@ -19,7 +19,11 @@ export const busHistoryStorage = {
     await Storage.setItem(KEY, JSON.stringify([newEntry, ...all]));
     return newEntry;
   },
-
+  getRecent: async (): Promise<IBusRideHistory[]> => {
+    const raw = await Storage.getItem(KEY);
+    const all: IBusRideHistory[] = raw ? JSON.parse(raw) : [];
+    return all.slice(0, 6);
+  },
   // 특정 노선 승차 횟수
   getCountByRoute: async (routeid: string): Promise<number> => {
     const all = await busHistoryStorage.getAll();

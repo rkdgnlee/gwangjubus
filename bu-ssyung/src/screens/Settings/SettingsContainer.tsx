@@ -1,25 +1,32 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal, ScrollView, Linking, Clipboard, Platform, ActivityIndicator } from 'react-native';
+// SettingsContainer.tsx
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal, ScrollView, Linking, Clipboard } from 'react-native';
 import { storage } from '../../utils/storage';
 import HistoryManageScreen from '../My/HistoryManageScreen';
 import { COLORS } from '../../constants/theme';
 import { version } from '../../../package.json';
 import { requestReview } from '@apps-in-toss/framework';
 import { useTicket } from '../../hooks/ticket/useTicket';
-import { AdComponent } from '../../components/ads/AdComponent';
+import { useFullScreenAd } from '../../hooks/ticket/useFullScreenAd';
 
 interface SettingsProps {
   cityName: string;
   onChangeRegion: () => void;
+  initialShowHistoryManage?: boolean;
+  onDidMount?: () => void;
 }
 
-const SettingsContainer = ({ onChangeRegion }: SettingsProps) => {
+const SettingsContainer = ({ onChangeRegion, initialShowHistoryManage = false, onDidMount }: SettingsProps) => {
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [showHistoryManage, setShowHistoryManage] = useState(false);
+  const [showHistoryManage, setShowHistoryManage] = useState(initialShowHistoryManage);
   const [showTicketDialog, setShowTicketDialog] = useState(false);
-  const [showAdPhase, setShowAdPhase] = useState(false);
 
   const { tickets, rewardTickets } = useTicket();
+  const { isAdLoading, showAd } = useFullScreenAd(); // 👈 2. 광고 상태 및 실행 가져오기
+
+  useEffect(() => {
+    onDidMount?.();
+  }, []);
 
   const handleFeatureNotice = () => {
     Alert.alert("준비 중인 기능", "실제 버스 탑승 기록을 기반으로 나만의 이동 타임라인을 만드는 기능이 업데이트될 예정입니다.");
@@ -59,25 +66,14 @@ const SettingsContainer = ({ onChangeRegion }: SettingsProps) => {
     Alert.alert("복사 완료", "이메일 주소가 클립보드에 복사되었습니다.");
   };
 
+  // 👈 3. 광고 완료 시 호출되는 로직
   const handleAdReward = async () => {
     await rewardTickets();
-    setShowAdPhase(false);
-    setShowTicketDialog(false);
+    setShowTicketDialog(false); // 충전 성공 후 모달 닫기
   };
 
   if (showHistoryManage) {
     return <HistoryManageScreen onBack={() => setShowHistoryManage(false)} />;
-  }
-
-  // 광고 전체화면
-  if (showAdPhase) {
-    return (
-      <AdComponent
-        tickets={tickets ?? 0}
-        onReward={handleAdReward}
-        onClose={() => setShowAdPhase(false)}
-      />
-    );
   }
 
   return (
@@ -97,7 +93,6 @@ const SettingsContainer = ({ onChangeRegion }: SettingsProps) => {
 
       {/* 메뉴 리스트 */}
       <View style={styles.menuContainer}>
-
         {/* 티켓 충전 - 첫 번째 메뉴 */}
         <TouchableOpacity style={styles.itemContainer} onPress={() => setShowTicketDialog(true)}>
           <View style={styles.itemLeft}>
@@ -127,20 +122,12 @@ const SettingsContainer = ({ onChangeRegion }: SettingsProps) => {
       </View>
 
       {/* 티켓 충전 다이얼로그 */}
-      <Modal transparent visible={showTicketDialog} animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>🎟️ 검색 티켓</Text>
-
-            <View style={styles.ticketInfoBox}>
-              <Text style={styles.ticketCount}>{tickets ?? 0}개</Text>
-              <Text style={styles.ticketLabel}>현재 보유 티켓</Text>
-            </View>
-
-            <Text style={styles.ticketDesc}>
-              버스·정류장 검색 결과를{'\n'}선택할 때마다 티켓 1개가 소모돼요.{'\n'}광고를 보면 75개를 충전할 수 있어요.
-            </Text>
-
+      {showTicketDialog && (
+        <View style={styles.absoluteOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>🎟️ 티켓 충전</Text>
+            <Text style={styles.modalDesc}>광고를 시청하고 티켓 20개를 충전하시겠습니까?</Text>
+            
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.modalBtnCancel}
@@ -148,16 +135,20 @@ const SettingsContainer = ({ onChangeRegion }: SettingsProps) => {
               >
                 <Text style={styles.modalBtnTextCancel}>닫기</Text>
               </TouchableOpacity>
+              
               <TouchableOpacity
-                style={styles.modalBtnSubmit}
-                onPress={() => setShowAdPhase(true)}
+                style={[styles.modalBtnSubmit, isAdLoading && styles.modalBtnDisabled]}
+                onPress={() => showAd(handleAdReward)}
+                disabled={isAdLoading}
               >
-                <Text style={styles.modalBtnTextSubmit}>광고 보고 충전</Text>
+                <Text style={[styles.modalBtnTextSubmit, isAdLoading && styles.modalBtnTextDisabled]}>
+                  {isAdLoading ? '광고 로딩 중...' : '광고 보고 충전'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
-      </Modal>
+      )}
 
       {/* 이메일 복사 모달 */}
       <Modal transparent visible={showEmailModal} animationType="fade">
@@ -238,9 +229,14 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 20, color: COLORS.text.main },
   modalButtons: { flexDirection: 'row', width: '100%' },
   modalBtnCancel: { flex: 1, padding: 12, alignItems: 'center', marginRight: 8, borderRadius: 8, backgroundColor: COLORS.border },
+    modalDesc: { fontSize: 16, marginBottom: 20, color: COLORS.text.main },
+
+  // 👈 5. 모달 내 충전 버튼 스타일 변경 및 비활성화 스타일 추가
   modalBtnSubmit: { flex: 1, padding: 12, alignItems: 'center', marginLeft: 8, borderRadius: 8, backgroundColor: COLORS.primary },
+  modalBtnDisabled: { backgroundColor: COLORS.border },
   modalBtnTextCancel: { color: COLORS.text.sub },
   modalBtnTextSubmit: { color: COLORS.text.white, fontWeight: 'bold' },
+  modalBtnTextDisabled: { color: COLORS.text.muted },
 
   // 티켓 다이얼로그
   ticketInfoBox: {
@@ -256,6 +252,26 @@ const styles = StyleSheet.create({
   emailDescription: { fontSize: 14, color: COLORS.text.hint, textAlign: 'center', marginBottom: 16, lineHeight: 20 },
   emailBox: { backgroundColor: COLORS.border, padding: 12, borderRadius: 8, width: '100%', marginBottom: 20, alignItems: 'center' },
   selectableEmail: { fontSize: 15, color: COLORS.text.main, fontWeight: '600' },
+
+  absoluteOverlay: {
+    position: 'absolute', // 👈 전체 화면을 덮기 위한 절대 위치 지정
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // 어두운 딤드 처리
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999, // 👈 다른 모든 요소보다 위에 오도록 설정
+  },
+  modalContainer: {
+    width: '85%',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 24,
+    // ... 기존 팝업 박스 스타일 유지 ...
+  },
+
 });
 
 export default SettingsContainer;

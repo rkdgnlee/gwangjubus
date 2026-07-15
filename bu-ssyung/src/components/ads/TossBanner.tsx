@@ -1,4 +1,4 @@
-import { InlineAd } from '@apps-in-toss/framework';
+import { getTossAppVersion, InlineAd } from '@apps-in-toss/framework';
 import { Text } from '@toss/tds-react-native';
 import { View, StyleSheet } from 'react-native';
 
@@ -9,12 +9,13 @@ interface TossBannerProps {
   variant?: 'expanded' | 'card';
 }
 
-export function TossBanner({ variant = 'expanded' }: TossBannerProps) {
+export function TossBanner({ variant = 'card' }: TossBannerProps) {
   const adGroupId = __DEV__ ? TEST_AD_GROUP_ID : AD_GROUP_ID;
+  const tossAppVersion = getTossAppVersion();
   if (__DEV__) {
     return (
       <View style={styles.devBanner}>
-        <Text style={styles.devText}>📢 광고 영역 (실제 앱에서만 노출)</Text>
+        <Text style={styles.devText}>📢 광고 영역 (실제 앱에서만 노출) {adGroupId}</Text>
       </View>
     );
   }

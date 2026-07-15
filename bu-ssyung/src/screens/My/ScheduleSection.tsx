@@ -23,15 +23,16 @@ const formatRideTime = (isoString: string) => {
 
 interface Props {
   onNavigate: (type: 'bus' | 'stop', data: any) => void;
+  setShowHistoryManage: (showHistory: boolean) => void;
 }
 
-const ScheduleSection = ({ onNavigate }: Props) => {
+const ScheduleSection = ({ onNavigate, setShowHistoryManage }: Props) => {
   const [history, setHistory] = useState<IBusRideHistory[]>([]);
   const [showStorageNotice, setShowStorageNotice] = useState(false); // ← 추가
 
   useEffect(() => {
     const load = async () => {
-      const data = await busHistoryStorage.getAll();
+      const data = await busHistoryStorage.getRecent();
       setHistory(data);
 
       // 기록이 있고 안내를 아직 안 봤으면 표시
@@ -46,6 +47,9 @@ const ScheduleSection = ({ onNavigate }: Props) => {
     await Storage.setItem('storage_notice_seen', 'true');
     setShowStorageNotice(false);
   };
+  const displayHistory = history.slice(0, 5); // 5개만 표시
+  const hasMore = history.length === 6; // 6개면 더 있다는 뜻
+
   if (history.length === 0) {
     return (
       <View style={styles.container}>
@@ -74,30 +78,24 @@ const ScheduleSection = ({ onNavigate }: Props) => {
         </View>
       )}
       <FlatList
-        data={history}
+        data={displayHistory}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         renderItem={({ item, index }) => {
           const { date, time } = formatRideTime(item.arrivedAt);
           const isFirst = index === 0;
-
           return (
             <View style={styles.itemRow}>
-              {/* 왼쪽 날짜/시간 */}
               <View style={styles.timeContainer}>
                 <Text style={styles.dateText}>{date}</Text>
                 <Text style={styles.timeText}>{time}</Text>
               </View>
-
-              {/* 타임라인 */}
               <View style={styles.timelineLine}>
                 {!isFirst && <View style={styles.lineTop} />}
                 <View style={styles.dot} />
                 <View style={styles.lineBottom} />
               </View>
-
-              {/* 오른쪽 카드 */}
               <TouchableOpacity
                 style={styles.infoCard}
                 activeOpacity={0.7}
@@ -113,6 +111,13 @@ const ScheduleSection = ({ onNavigate }: Props) => {
             </View>
           );
         }}
+        ListFooterComponent={
+          hasMore ? (
+            <TouchableOpacity style={styles.moreButton} onPress={() => {setShowHistoryManage( true)}}>
+              <Text style={styles.moreButtonText}>탑승 기록 확인하기</Text>
+            </TouchableOpacity>
+          ) : null
+        }
       />
     </View>
   );
@@ -211,7 +216,20 @@ const styles = StyleSheet.create({
   },
   noticeClose: { padding: 4, marginLeft: 8 },
   noticeCloseText: { fontSize: 14, color: COLORS.text.hint },
-
+  moreButton: {
+    marginTop: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  moreButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primaryDark,
+  },
 });
 
 export default ScheduleSection;

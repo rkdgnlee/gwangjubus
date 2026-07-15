@@ -121,7 +121,8 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
   const { consumeTicket, rewardTickets, tickets } = useTicket();
   const [pendingFavorite, setPendingFavorite] = useState<{ type: 'bus' | 'stop', data: any } | null>(null);
   const [showAdPhase, setShowAdPhase] = useState(false);
-
+  const [showHistoryManage, setShowHistoryManage] = useState(false);
+  
   const { open } = useToast();
   const onToggleAlarm = (item: any, stopInfo: any, cityCode: number) => {
     if (activeAlarmId === item.routeid) {
@@ -266,7 +267,13 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
       case 'My':
         return (
           <View style={{ flex: 1 }}>
-            <MyContainer onNavigate={handleNavigationRequest} />
+            <MyContainer 
+              onNavigate={handleNavigationRequest}
+              setShowHistoryManage={() => {
+                setShowHistoryManage(true);
+                setActiveTab('Settings');
+              }}
+            />
             <HomeAddTooltip />
           </View>
         );
@@ -283,7 +290,12 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
         );
       case 'Settings':
         return (
-          <SettingsContainer cityName={cityName} onChangeRegion={onReset} />
+          <SettingsContainer
+            cityName={cityName}
+            onChangeRegion={onReset}
+            initialShowHistoryManage={showHistoryManage} 
+            onDidMount={() => setShowHistoryManage(false)}
+          />
         );
     }
   };

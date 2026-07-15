@@ -8,9 +8,10 @@ import { COLORS } from '../../constants/theme';
 
 interface Props {
   onNavigate: (type: 'bus' | 'stop', data: any) => void;
+  setShowHistoryManage: (showHistory: boolean) => void;
 }
 
-const MyContainer = ({ onNavigate }: Props) => {
+const MyContainer = ({ onNavigate, setShowHistoryManage }: Props) => {
   return (
     <View style={styles.container}>
       {/* 상단 50% */}
@@ -19,7 +20,7 @@ const MyContainer = ({ onNavigate }: Props) => {
       </View>
       {/* 하단 50% */}
       <View style={styles.bottomSection}>
-        <ScheduleSection onNavigate={onNavigate} />
+        <ScheduleSection onNavigate={onNavigate} setShowHistoryManage={setShowHistoryManage} />
       </View>
     </View>
   );
