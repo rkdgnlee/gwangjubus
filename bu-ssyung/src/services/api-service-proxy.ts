@@ -25,7 +25,7 @@ export const getArriveInfoInBusStop = async (cityCode: number, nodeId: string): 
     const data = await call('/api/stop-arrive', {
       endpoint: 'getSttnAcctoArvlPrearngeInfoList',
       pageNo: 1,
-      numOfRows: 50,
+      numOfRows: 10,
       cityCode,
       nodeId,
     });
@@ -41,7 +41,7 @@ export const getSpecifyArriveInfoInBusStop = async (cityCode: number, nodeId: st
     const data = await call('/api/stop-arrive', {
       endpoint: 'getSttnAcctoSpcifyRouteBusArvlPrearngeInfoList',
       pageNo: 1,
-      numOfRows: 200,
+      numOfRows: 10,
       cityCode,
       nodeId,
       routeId,
@@ -74,7 +74,7 @@ export const getSpecifyBusLocation = async (cityCode: number, routeId: string, n
     const data = await call('/api/bus-location', {
       endpoint: 'getRouteAcctoSpcifySttnAccesBusLcInfo',
       pageNo: 1,
-      numOfRows: 250,
+      numOfRows: 10,
       cityCode,
       routeId,
       nodeId,
@@ -93,7 +93,7 @@ export const getBusRouteAccetoThroghSttnList = async (cityCode: number, routeId:
     const data = await call('/api/bus-route', {
       endpoint: 'getRouteAcctoThrghSttnList',
       pageNo: 1,
-      numOfRows: 100,
+      numOfRows: 10,
       cityCode,
       routeId,
     });
@@ -124,7 +124,7 @@ export const getBusRouteNoList = async (cityCode: number, routeNo: string): Prom
     const data = await call('/api/bus-route', {
       endpoint: 'getRouteNoList',
       pageNo: 1,
-      numOfRows: 20,
+      numOfRows: 15,
       cityCode,
       routeNo,
     });
@@ -156,7 +156,7 @@ export const getBusStopNoList = async (cityCode: number, nodeNm: string, nodeNo?
   }
 };
 
-export const getBusStopThroghRouteList = async (cityCode: number, nodeid: string, numOfRows: number = 50): Promise<IStopThroghBusRoute[]> => {
+export const getBusStopThroghRouteList = async (cityCode: number, nodeid: string, numOfRows: number = 10): Promise<IStopThroghBusRoute[]> => {
   try {
     const data = await call('/api/stop', {
       endpoint: 'getSttnThrghRouteList',

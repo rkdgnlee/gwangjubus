@@ -302,10 +302,10 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.contentArea}>{renderContent()}</View>
       <View style={{ width: '100%' }}>
         <TossBanner />
       </View>
+      <View style={styles.contentArea}>{renderContent()}</View>
       <View style={styles.bottomNav}>
         {(['My', 'CityBus', 'Settings'] as TabType[]).map(tab => (
           <TabButton

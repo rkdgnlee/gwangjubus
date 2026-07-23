@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { getBusTypeColor } from '../../constants/busColors';
 import { IBusRoute } from '../../types/bus';
-import { IStopWithRoutes } from '../../hooks/BusStop/useBusStopNoList';
 import { COLORS } from '../../constants/theme';
+import { IStopWithRoutes } from '../../hooks/BusStop/useBusStopNoList';
 
 interface BusResultListProps {
   data: IBusRoute[] | IStopWithRoutes[];
@@ -26,14 +26,15 @@ const BusResultList = ({ data, mode, cityName, onPressItem }: BusResultListProps
           <View style={{ flex: 1 }}>
             <Text style={styles.stopName}>🚌 {stopItem.nodenm}</Text>
             <View style={styles.routeList}>
-              {stopItem.routes.slice(0, 3).map((route) => (
-                <Text key={route.routeid} style={styles.routeText}>
-                   <Text style={styles.routeNo}>{route.routeno}</Text>  🚩 {route.startnodenm} → 🏁 {route.endnodenm}
-                </Text>
-              ))}
-              {/* {stopItem.routes.length > 3 && (
-                <Text style={styles.moreRoutes}>+{stopItem.routes.length - 3}개 노선 더 있음</Text>
-              )} */}
+              {!stopItem.routesLoaded ? (
+                <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: 6 }} />
+              ) : stopItem.routes.length > 0 ? (
+                stopItem.routes.map((route) => (
+                  <Text key={route.routeid} style={styles.routeText}>
+                    <Text style={styles.routeNo}>{route.routeno}</Text> 🚩 {route.startnodenm} → 🏁 {route.endnodenm}
+                  </Text>
+                ))
+              ) : null}
             </View>
           </View>
         </TouchableOpacity>

@@ -4,9 +4,10 @@ import { getBusTypeColor } from '../../constants/busColors';
 import { IBusRoute } from '../../types/bus';
 import { IStopWithRoutes } from '../../hooks/BusStop/useBusStopNoList';
 import { COLORS } from '../../constants/theme';
+import { IStop } from '../../types/stop';
 
 interface BusResultListProps {
-  data: IBusRoute[] | IStopWithRoutes[];
+  data: IBusRoute[] | IStop[];
   mode: 'bus' | 'stop';
   cityName: string;
   onPressItem: (item: any) => void;

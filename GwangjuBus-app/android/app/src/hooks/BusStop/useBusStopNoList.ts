@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { getBusStopNoList } from '../../services/BusStop/getBusStopNoList';
-import { getBusStopThroghRouteList } from '../../services/BusStop/getBusStopThroghRouteList';
 import { IStop, IStopThroghBusRoute } from '../../types/stop';
 
 export interface IStopWithRoutes extends IStop {
@@ -8,7 +7,7 @@ export interface IStopWithRoutes extends IStop {
 }
 
 export const useBusStopNoList = () => {
-  const [stops, setStops] = useState<IStopWithRoutes[]>([]);
+  const [stops, setStops] = useState<IStop[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,22 +27,22 @@ export const useBusStopNoList = () => {
       }
 
       // 각 정류장마다 경유 버스 목록 병렬 조회
-      const stopsWithRoutes = await Promise.all(
-        stopList.map(async (stop) => {
-          // stop 객체가 유효한지 한 번 더 체크
-          if (!stop || !stop.nodeid) return { ...stop, routes: [] };
-          try {
-            const routes = await getBusStopThroghRouteList(cityCode, stop.nodeid, 10);
-            // routes 데이터가 단일 객체이거나 없을 경우를 대비해 배열로 정규화
-            const validRoutes = Array.isArray(routes) ? routes : (routes ? [routes] : []);
-            return { ...stop, routes: validRoutes };
-          } catch {
-            return { ...stop, routes: [] };
-          }
-        })
-      );
+      // const stopsWithRoutes = await Promise.all(
+      //   stopList.map(async (stop) => {
+      //     // stop 객체가 유효한지 한 번 더 체크
+      //     if (!stop || !stop.nodeid) return { ...stop, routes: [] };
+      //     try {
+      //       const routes = await getBusStopThroghRouteList(cityCode, stop.nodeid, 10);
+      //       // routes 데이터가 단일 객체이거나 없을 경우를 대비해 배열로 정규화
+      //       const validRoutes = Array.isArray(routes) ? routes : (routes ? [routes] : []);
+      //       return { ...stop, routes: validRoutes };
+      //     } catch {
+      //       return { ...stop, routes: [] };
+      //     }
+      //   })
+      // );
 
-      setStops(stopsWithRoutes);
+      setStops(stopList);
     } catch (err) {
       setError('버스 정류장 정보를 가져오는데 실패했습니다. 🚌');
       console.error(err);
