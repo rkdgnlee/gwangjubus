@@ -1,3 +1,4 @@
+import 'dotenv/config'; // 최상단에 추가
 import { appsInToss } from '@apps-in-toss/framework/plugins';
 import { defineConfig } from '@granite-js/react-native/config';
 import { env } from '@granite-js/plugin-env';
@@ -19,7 +20,9 @@ export default defineConfig({
       API_STOP_ARRIVE_URL: process.env.API_STOP_ARRIVE_URL ?? '',
       API_BUS_ROUTE_URL: process.env.API_BUS_ROUTE_URL ?? '',
       API_BUS_LOCATION_URL: process.env.API_BUS_LOCATION_URL ?? '',
-      API_STOP_URL: process.env.API_STOP_URL ?? ''
+      API_STOP_URL: process.env.API_STOP_URL ?? '',
+      SUPABASE_URL: process.env.SUPABASE_URL ?? '',
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ?? ''
     }),
   ],
 });

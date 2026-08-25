@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.text.main,
     marginBottom: 15,
@@ -146,11 +146,11 @@ const styles = StyleSheet.create({
   emptySubText: { fontSize: 13, color: COLORS.text.hint, textAlign: 'center', lineHeight: 20 },
 
   listContent: { paddingBottom: 20 },
-  itemRow: { flexDirection: 'row', marginBottom: 16, alignItems: 'flex-start' },
+  itemRow: { flexDirection: 'row', marginBottom: 10, alignItems: 'flex-start' },
 
   timeContainer: { width: 72, alignItems: 'flex-end', paddingTop: 4 },
-  dateText: { fontSize: 12, color: COLORS.text.hint, marginBottom: 2 },
-  timeText: { fontSize: 13, fontWeight: '600', color: COLORS.text.main },
+  dateText: { fontSize: 13, color: COLORS.text.hint, marginBottom: 2 },
+  timeText: { fontSize: 14, fontWeight: '600', color: COLORS.text.main },
 
   timelineLine: {
     width: 20,

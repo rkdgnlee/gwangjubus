@@ -17,8 +17,6 @@ import { COLORS } from '../constants/theme';
 import { useToast } from '@toss/tds-react-native';
 import { getSpecifyArriveInfoInBusStop } from '../services/api-service-proxy';
 import { TossBanner } from '../components/ads/TossBanner';
-import { useTicket } from '../hooks/ticket/useTicket';
-import { AdComponent } from '../components/ads/AdComponent';
 import { HomeAddTooltip } from '../components/HomeAddTooltip';
 
 interface MainProps {
@@ -118,9 +116,6 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
   const autoStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ticket
-  const { consumeTicket, rewardTickets, tickets } = useTicket();
-  const [pendingFavorite, setPendingFavorite] = useState<{ type: 'bus' | 'stop', data: any } | null>(null);
-  const [showAdPhase, setShowAdPhase] = useState(false);
   const [showHistoryManage, setShowHistoryManage] = useState(false);
   
   const { open } = useToast();
@@ -232,36 +227,13 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
     setFavorites(data);
   };
 
-  const handleNavigationRequest = async (type: 'bus' | 'stop', data: any) => {
-    const ok = await consumeTicket();
-    if (!ok) {
-      // 티켓 0 → 광고 전체화면 표시
-      setPendingFavorite({ type, data });
-      setShowAdPhase(true);
-      return;
-    }
+  const handleNavigationRequest = (type: 'bus' | 'stop', data: any) => {
+    // 💡 티켓 차감 및 광고 팝업은 CityBusContainer의 initialData 핸들러가 알아서 전담합니다.
     setCityBusInitData({ type, data });
     setActiveTab('CityBus');
   };
 
-  const handleAdReward = async () => {
-    await rewardTickets();
-    setShowAdPhase(false);
-    if (pendingFavorite) {
-      setCityBusInitData(pendingFavorite);
-      setActiveTab('CityBus');
-      setPendingFavorite(null);
-    }
-  };
-  if (showAdPhase) {
-    return (
-      <AdComponent
-        tickets={tickets ?? 0}
-        onReward={handleAdReward}
-        onClose={() => setShowAdPhase(false)}
-      />
-    );
-  }
+  
   const renderContent = () => {
     switch (activeTab) {
       case 'My':
@@ -302,7 +274,7 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
 
   return (
     <View style={styles.container}>
-      <View style={{ width: '100%' }}>
+      <View style={styles.bannerContainer}>
         <TossBanner />
       </View>
       <View style={styles.contentArea}>{renderContent()}</View>
@@ -332,6 +304,11 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   contentArea: { flex: 1 },
+  bannerContainer: {
+    width: '100%',
+    paddingTop: 10, // 💡 상단 노치/상태바 레이어와의 중첩을 피하기 위한 여백
+    backgroundColor: COLORS.background,
+  },
   bottomNav: {
     flexDirection: 'row',
     height: 64,

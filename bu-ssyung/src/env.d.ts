@@ -5,6 +5,8 @@ type Env = {
   API_BUS_ROUTE_URL: string;
   API_BUS_LOCATION_URL: string;
   API_STOP_URL: string;
+  SUPABASE_URL: string;
+  SUPABASE_ANON_KEY: string;
 };
 
 interface ImportMeta {

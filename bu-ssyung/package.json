@@ -1,6 +1,6 @@
 {
   "name": "bu-ssyung",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "scripts": {
     "dev": "granite dev",
@@ -19,6 +19,7 @@
     "@granite-js/plugin-env": "^1.0.31",
     "@granite-js/react-native": "1.0.27",
     "@react-native-async-storage/async-storage": "^3.1.1",
+    "@supabase/supabase-js": "^2.112.4",
     "@toss/tds-react-native": "^2.0.3",
     "brick-module": "0.5.1",
     "react": "19.2.3",

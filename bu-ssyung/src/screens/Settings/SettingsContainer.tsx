@@ -6,8 +6,8 @@ import HistoryManageScreen from '../My/HistoryManageScreen';
 import { COLORS } from '../../constants/theme';
 import { version } from '../../../package.json';
 import { requestReview } from '@apps-in-toss/framework';
-import { useTicket } from '../../hooks/ticket/useTicket';
 import { useFullScreenAd } from '../../hooks/ticket/useFullScreenAd';
+import { useTicket } from '../../hooks/tickets/TicketContext';
 
 interface SettingsProps {
   cityName: string;

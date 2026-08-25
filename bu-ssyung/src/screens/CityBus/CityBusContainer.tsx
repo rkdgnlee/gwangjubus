@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator, FlatList } from 'react-native';
 import BusRouteDetail from './BusRouteDetail';
 import BusStopDetail from './BusStopDetail';
@@ -8,8 +8,8 @@ import { useBusRouteNoList } from '../../hooks/BusRoute/useBusRouteNoList';
 import { useBusStopNoList } from '../../hooks/BusStop/useBusStopNoList';
 import { useSearchHistory } from '../../hooks/search/useSearchHistory';
 import { COLORS } from '../../constants/theme';
-import { useTicket } from '../../hooks/ticket/useTicket';
-import { AdComponent } from '../../components/ads/AdComponent';
+import { RewardAd } from '../../components/ads/RewardAd';
+import { useTicket } from '../../hooks/tickets/TicketContext';
 
 interface Props {
   cityName: string;
@@ -23,12 +23,11 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
   const [searchMode, setSearchMode] = useState<'bus' | 'stop'>('bus');
   const [searchText, setSearchText] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
-  const [navStack, setNavStack] = useState<any[]>(
-    initialData ? [{ screen: initialData.type, data: initialData.data }] : []
-  );
+  const [navStack, setNavStack] = useState<any[]>([]);
+  
   const [pendingScreen, setPendingScreen] = useState<{ screen: 'bus' | 'stop', data: any } | null>(null);
   const [showAdPhase, setShowAdPhase] = useState(false);
-
+  const isNavigatingRef = useRef(false);  
   const { routes, loading: busLoading, search: searchBus, reset: resetBus } = useBusRouteNoList();
   const { stops, loading: stopLoading, search: searchStop, reset: resetStop } = useBusStopNoList();
 
@@ -53,14 +52,24 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
   const addHistory = searchMode === 'bus' ? addBusHistory : addStopHistory;
   const clearHistory = searchMode === 'bus' ? clearBusHistory : clearStopHistory;
   const removeHistory = searchMode === 'bus' ? removeBusHistory : removeStopHistory;
-
   useEffect(() => {
     if (initialData) {
       setSearchText('');
       setHasSearched(false);
-      setNavStack([{ screen: initialData.type, data: initialData.data }]);
+
+      consumeTicket().then((hasTicket) => {
+        if (hasTicket) {
+          // 티켓이 있으면 정상 진입
+          setNavStack([{ screen: initialData.type, data: initialData.data }]);
+        } else {
+          // 티켓이 없으면 타겟 화면을 보관하고 광고 화면 표시
+          setPendingScreen({ screen: initialData.type, data: initialData.data });
+          setShowAdPhase(true);
+        }
+      });
     }
   }, [initialData]);
+
 
   const handleModeChange = (mode: 'bus' | 'stop') => {
     setSearchMode(mode);
@@ -71,14 +80,22 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
   };
 
   const pushScreen = async (screen: 'bus' | 'stop', data: any) => {
-    const ok = await consumeTicket();
-    if (!ok) {
-      // 티켓 0 → 광고 전체화면
-      setPendingScreen({ screen, data });
-      setShowAdPhase(true);
-      return;
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+
+    try {
+      const ok = await consumeTicket();
+      if (!ok) {
+        setPendingScreen({ screen, data });
+        setShowAdPhase(true);
+        return;
+      }
+      setNavStack(prev => [...prev, { screen, data }]);
+    } finally {
+      setTimeout(() => {
+        isNavigatingRef.current = false;
+      }, 500);
     }
-    setNavStack(prev => [...prev, { screen, data }]);
   };
 
   const handleAdReward = async () => {
@@ -109,7 +126,7 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
   // 광고 전체화면
   if (showAdPhase) {
     return (
-      <AdComponent
+      <RewardAd
         tickets={tickets ?? 0}
         onReward={handleAdReward}
         onClose={() => setShowAdPhase(false)}
@@ -195,7 +212,7 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
 
       {/* 30회 이하 경고 배너 */}
       {showWarn && hasSearched && (
-        <AdComponent
+        <RewardAd
           tickets={tickets ?? 0}
           onReward={rewardTickets}
           onClose={dismissWarn}

@@ -1,11 +1,11 @@
 // FavoriteSection.tsx
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Platform } from 'react-native';
 import { IFavorite, IFavoriteStop, IFavoriteBus } from '../../types/favorite';
 import { useFavorites } from '../../hooks/favorites/useFavorites';
 import { COLORS } from '../../constants/theme';
-import { useTicket } from '../../hooks/ticket/useTicket';
 import { useFullScreenAd } from '../../hooks/ticket/useFullScreenAd';
+import { useTicket } from '../../hooks/tickets/TicketContext';
 
 interface Props {
   onNavigate: (type: 'bus' | 'stop', data: any) => void;
@@ -13,36 +13,14 @@ interface Props {
 
 const FavoriteSection = ({ onNavigate }: Props) => {
   const { favorites, load } = useFavorites();
-  const { consumeTicket, rewardTickets, tickets, showWarn, dismissWarn } = useTicket();
+  const { rewardTickets, tickets, showWarn, dismissWarn } = useTicket();
   const { isAdLoading, showAd } = useFullScreenAd(); // 👈 2. 광고 상태 가져오기
 
   React.useEffect(() => { load(); }, []);
 
-  const handlePress = async (item: IFavorite) => {
-    const hasTicket = await consumeTicket();
-    
-    if (!hasTicket) {
-      Alert.alert(
-        '티켓 부족', 
-        '보유하신 티켓이 없습니다. 광고를 보고 충전할까요?', 
-        [
-          { text: '취소', style: 'cancel' },
-          { 
-            text: '광고 보고 충전', 
-            // 👈 3. 얼럿 내 충전 시에도 백그라운드 로드된 광고가 있다면 바로 띄워줌
-            onPress: () => {
-              if (isAdLoading) {
-                showAd(rewardTickets);
-              } else {
-                Alert.alert('잠시만 기다려주세요', '광고를 불러오는 중입니다.');
-              }
-            } 
-          }
-        ]
-      );
-      return; 
-    }
-
+  const handlePress = (item: IFavorite) => {
+    // 💡 티켓 검사/차감/광고 팝업은 이동을 받는 CityBusContainer(initialData)에서 
+    // 전부 알아서 처리하므로 여기서는 단순 이동만 시켜줍니다.
     if (item.type === 'stop') {
       const s = item as IFavoriteStop;
       onNavigate('stop', { nodeid: s.nodeid, nodenm: s.nodenm, nodeno: s.nodeno });
@@ -100,7 +78,7 @@ const FavoriteSection = ({ onNavigate }: Props) => {
         </View>
       )}
 
-      <Text style={styles.headerTitle}>저장</Text>
+      <Text style={styles.headerTitle}>저장해놓은 항목</Text>
       <FlatList
         data={[...favorites].sort((a, b) => b.savedAt - a.savedAt)}
         keyExtractor={(item) => item.id}
@@ -171,7 +149,7 @@ const styles = StyleSheet.create({
   closeButton: { paddingHorizontal: 8, paddingVertical: 6 },
   closeButtonText: { color: '#888', fontSize: 13, fontWeight: '500' },
 
-  headerTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 15, marginTop: 10 },
+  headerTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 10, marginTop: 0 },
   listContent: { paddingBottom: 10 },
   row: { justifyContent: 'space-between', marginBottom: 12 },
   card: {
