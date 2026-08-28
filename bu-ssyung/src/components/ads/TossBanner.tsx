@@ -1,13 +1,11 @@
 import { getTossAppVersion, InlineAd } from '@apps-in-toss/framework';
 import { Text } from '@toss/tds-react-native';
 import { View } from 'react-native';
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import { logAdEvent } from '../../lib/adLogger';
 
 const AD_GROUP_ID = 'ait.v2.live.cb6d1265d76b4376';
 const TEST_AD_GROUP_ID = 'ait-ad-test-banner-id';
-
-// 🔧 디버깅용 플래그: true면 __DEV__에서도 실제 InlineAd(테스트 ID)를 렌더링
 const DEBUG_SHOW_REAL_AD = true;
 
 function isVersionSupported(current: string, minVersion: string) {
@@ -26,23 +24,26 @@ function TossBannerComponent() {
   const adGroupId = __DEV__ ? TEST_AD_GROUP_ID : AD_GROUP_ID;
   const tossVersion = getTossAppVersion();
 
+  // 👇 컴포넌트가 실제로 마운트/렌더 시도됐는지 무조건 기록 (SDK 콜백과 무관하게)
+  useEffect(() => {
+    logAdEvent('banner_mount_attempt', {
+      adGroupId,
+      tossVersion,
+      isDev: __DEV__,
+      timestamp: new Date().toISOString(),
+    });
+  }, []);
+
   if (__DEV__ && !DEBUG_SHOW_REAL_AD) {
     return (
-      <View
-        style={{
-          width: '100%',
-          height: 96,
-          backgroundColor: '#f2f4f6',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
+      <View style={{ width: '100%', height: 96, backgroundColor: '#f2f4f6', justifyContent: 'center', alignItems: 'center' }}>
         <Text>📢 광고 영역 (실제 앱에서만 노출) {adGroupId}</Text>
       </View>
     );
   }
 
   if (!__DEV__ && !isVersionSupported(tossVersion, '5.241.0')) {
+    logAdEvent('banner_skipped_unsupported_version', { tossVersion });
     console.log('[TossBanner] unsupported version, skip render', { tossVersion });
     return null;
   }
@@ -64,4 +65,3 @@ function TossBannerComponent() {
 }
 
 export const TossBanner = memo(TossBannerComponent);
-// usespoon2!@#

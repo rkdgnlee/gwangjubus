@@ -1,6 +1,4 @@
-// components/ads/RewardAd.tsx
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,6 +8,11 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { loadFullScreenAd, showFullScreenAd, getTossAppVersion } from '@apps-in-toss/framework';
+import { logAdEvent } from '../../lib/adLogger';
+
+const REWARDED_AD_GROUP_ID = 'ait.v2.live.bcccc1f2d86244b7'; // 실제 리워드 광고 그룹 ID
+const TEST_REWARDED_AD_GROUP_ID = 'ait-ad-test-rewarded-id';
 
 interface RewardAdProps {
   tickets: number;
@@ -17,76 +20,117 @@ interface RewardAdProps {
   onClose: () => void;
 }
 
+function isVersionSupported(current: string, minVersion: string) {
+  const c = current.split('.').map(Number);
+  const m = minVersion.split('.').map(Number);
+  for (let i = 0; i < Math.max(c.length, m.length); i++) {
+    const cv = c[i] ?? 0;
+    const mv = m[i] ?? 0;
+    if (cv > mv) return true;
+    if (cv < mv) return false;
+  }
+  return true;
+}
+
 export const RewardAd = ({ tickets, onReward, onClose }: RewardAdProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const unregisterRef = useRef<(() => void) | null>(null);
+  const rewardGrantedRef = useRef(false);
 
-  // 1. 광고 모달 노출 로그 (ad_impression)
+  const adGroupId = __DEV__ ? TEST_REWARDED_AD_GROUP_ID : REWARDED_AD_GROUP_ID;
+  const tossVersion = getTossAppVersion();
+
   useEffect(() => {
-    console.log('[Analytics] ad_impression', {
-      adType: 'rewarded',
-      currentTickets: tickets,
-      timestamp: new Date().toISOString(),
-    });
-  }, [tickets]);
+    logAdEvent('reward_modal_shown', { currentTickets: tickets, adGroupId, tossVersion });
 
-  // 2. 광고 시청 완료 및 보상 지급 (ad_reward_claimed)
-  const handleCompleteAd = () => {
-    setIsLoading(false);
-    console.log('[Analytics] ad_reward_claimed', {
-      adType: 'rewarded',
-      rewardAmount: 30, // 지급 티켓 수
-      prevTickets: tickets,
-      timestamp: new Date().toISOString(),
-    });
-    
-    onReward();
-  };
+    return () => {
+      // 언마운트 시 구독 등록 해제 (메모리 누수 방지)
+      if (unregisterRef.current) {
+        unregisterRef.current();
+        unregisterRef.current = null;
+      }
+    };
+  }, []);
 
-  // 3. 광고 시청 시작 (ad_start)
-  const handleStartAd = async () => {
-    console.log('[Analytics] ad_start', {
-      adType: 'rewarded',
-      timestamp: new Date().toISOString(),
-    });
+  const handleStartAd = () => {
+    // 1. 최소 지원 버전 체크
+    if (!__DEV__ && !isVersionSupported(tossVersion, '5.138.0')) {
+      logAdEvent('reward_skipped_unsupported_version', { tossVersion, adGroupId });
+      Alert.alert('알림', '현재 토스 앱 버전에서는 보상형 광고를 지원하지 않습니다. 앱을 업데이트해 주세요.');
+      return;
+    }
 
     setIsLoading(true);
+    rewardGrantedRef.current = false;
+    logAdEvent('reward_ad_load_start', { adGroupId });
 
-    try {
-      // 💡 토스 광고 SDK 시청 로직 처리 구역
-      // 예시: await TossAdSDK.showRewardedAd();
-      
-      // 임시 시뮬레이션 (2초 후 광고 완료)
-      setTimeout(() => {
-        handleCompleteAd();
-      }, 2000);
-    } catch (error: any) {
-      handleAdError(error);
+    // 기존 구독 해제
+    if (unregisterRef.current) {
+      unregisterRef.current();
     }
+
+    // 2. 광고 로드
+    unregisterRef.current = loadFullScreenAd({
+      options: { adGroupId },
+      onEvent: (event) => {
+        logAdEvent(`reward_${event.type}`, { ...event, adGroupId });
+
+        if (event.type === 'loaded') {
+          // 3. 로드 완료 후 광고 표시 및 show 구독 함수로 갱신
+          const unregisterShow = showFullScreenAd({
+            options: { adGroupId },
+            onEvent: (showEvent) => {
+              logAdEvent(`reward_${showEvent.type}`, { ...showEvent, adGroupId });
+
+              switch (showEvent.type) {
+                case 'userEarnedReward':
+                  rewardGrantedRef.current = true;
+                  onReward();
+                  break;
+
+                case 'dismissed':
+                  setIsLoading(false);
+                  if (rewardGrantedRef.current) {
+                    onClose(); // 보상을 정상 획득했을 때만 모달 닫기
+                  }
+                  break;
+
+                case 'failedToShow':
+                  // 3. 광고 표시 실패 시 멈춤 방지
+                  setIsLoading(false);
+                  Alert.alert('알림', '광고를 재생할 수 없습니다. 잠시 후 다시 시도해 주세요.');
+                  break;
+
+                default:
+                  // requested, show, impression, clicked 등 단순 로그 기록용 이벤트
+                  break;
+              }
+            },
+            onError: (error) => {
+              logAdEvent('reward_show_error', { error, adGroupId });
+              handleAdError(error);
+            },
+          });
+
+          // showFullScreenAd의 구독 해제 함수 보관
+          unregisterRef.current = unregisterShow;
+        }
+      },
+      onError: (error) => {
+        logAdEvent('reward_load_error', { error, adGroupId });
+        handleAdError(error);
+      },
+    });
   };
 
-  // 4. 광고 로드/재생 실패 (ad_load_failed)
   const handleAdError = (error: any) => {
     setIsLoading(false);
-    console.error('[Analytics] ad_load_failed', {
-      adType: 'rewarded',
-      errorCode: error?.code ?? 'UNKNOWN_ERROR',
-      errorMessage: error?.message ?? '광고를 불러오지 못했습니다.',
-      timestamp: new Date().toISOString(),
-    });
-
     Alert.alert('알림', '광고를 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
   };
 
-  // 5. 중도 닫기 / 이탈 (ad_closed_without_reward)
   const handleClose = () => {
-    if (isLoading) return; // 광고 시청 중 닫기 방지
-
-    console.log('[Analytics] ad_closed_without_reward', {
-      adType: 'rewarded',
-      currentTickets: tickets,
-      timestamp: new Date().toISOString(),
-    });
-
+    if (isLoading) return;
+    logAdEvent('reward_closed_without_reward', { currentTickets: tickets, adGroupId });
     onClose();
   };
 
@@ -106,7 +150,7 @@ export const RewardAd = ({ tickets, onReward, onClose }: RewardAdProps) => {
           {isLoading ? (
             <View style={styles.loadingArea}>
               <ActivityIndicator size="large" color="#31D698" />
-              <Text style={styles.loadingText}>광고 준비 중...</Text>
+              <Text style={styles.loadingText}>광고 불러오는 중...</Text>
             </View>
           ) : (
             <View style={styles.buttonContainer}>
