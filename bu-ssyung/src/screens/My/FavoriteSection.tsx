@@ -9,10 +9,14 @@ import { useTicket } from '../../hooks/tickets/TicketContext';
 
 interface Props {
   onNavigate: (type: 'bus' | 'stop', data: any) => void;
+  bottomInset : number;
 }
 
-const FavoriteSection = ({ onNavigate }: Props) => {
+const FavoriteSection = ({ onNavigate, bottomInset = 0 }: Props) => {
   const { favorites, load } = useFavorites();
+  const MAX_FAVORITES = 6;
+  const sortedFavorites = [...favorites].sort((a, b) => b.savedAt - a.savedAt);
+  const displayFavorites = sortedFavorites.slice(0, MAX_FAVORITES);
   const { rewardTickets, tickets, showWarn, dismissWarn } = useTicket();
   const { isAdLoading, showAd } = useFullScreenAd(); // 👈 2. 광고 상태 가져오기
 
@@ -80,7 +84,7 @@ const FavoriteSection = ({ onNavigate }: Props) => {
 
       <Text style={styles.headerTitle}>저장해놓은 항목</Text>
       <FlatList
-        data={[...favorites].sort((a, b) => b.savedAt - a.savedAt)}
+        data={displayFavorites}
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.row}
@@ -103,7 +107,7 @@ const FavoriteSection = ({ onNavigate }: Props) => {
             </View>
           </TouchableOpacity>
         )}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: bottomInset }]}
       />
     </View>
   );

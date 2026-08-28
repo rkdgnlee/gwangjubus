@@ -9,18 +9,27 @@ import { COLORS } from '../../constants/theme';
 interface Props {
   onNavigate: (type: 'bus' | 'stop', data: any) => void;
   setShowHistoryManage: (showHistory: boolean) => void;
+  bottomInset?: number;
 }
 
-const MyContainer = ({ onNavigate, setShowHistoryManage }: Props) => {
+interface Props {
+  onNavigate: (type: 'bus' | 'stop', data: any) => void;
+  setShowHistoryManage: (showHistory: boolean) => void;
+  bottomInset?: number;
+}
+
+const MyContainer = ({ onNavigate, setShowHistoryManage, bottomInset = 0 }: Props) => {
   return (
     <View style={styles.container}>
-      {/* 상단 50% */}
       <View style={styles.topSection}>
-        <FavoriteSection onNavigate={onNavigate} />
+        <FavoriteSection onNavigate={onNavigate} bottomInset={bottomInset} />
       </View>
-      {/* 하단 50% */}
       <View style={styles.bottomSection}>
-        <ScheduleSection onNavigate={onNavigate} setShowHistoryManage={setShowHistoryManage} />
+        <ScheduleSection
+          onNavigate={onNavigate}
+          setShowHistoryManage={setShowHistoryManage}
+          bottomInset={bottomInset}
+        />
       </View>
     </View>
   );

@@ -24,10 +24,14 @@ const formatRideTime = (isoString: string) => {
 interface Props {
   onNavigate: (type: 'bus' | 'stop', data: any) => void;
   setShowHistoryManage: (showHistory: boolean) => void;
+  bottomInset : number;
 }
 
-const ScheduleSection = ({ onNavigate, setShowHistoryManage }: Props) => {
+const ScheduleSection = ({ onNavigate, setShowHistoryManage, bottomInset }: Props) => {
   const [history, setHistory] = useState<IBusRideHistory[]>([]);
+  const MAX_HISTORYS = 6;
+  const displayHistorys = history.slice(0, MAX_HISTORYS);
+  
   const [showStorageNotice, setShowStorageNotice] = useState(false); // ← 추가
 
   useEffect(() => {
@@ -47,8 +51,7 @@ const ScheduleSection = ({ onNavigate, setShowHistoryManage }: Props) => {
     await Storage.setItem('storage_notice_seen', 'true');
     setShowStorageNotice(false);
   };
-  const displayHistory = history.slice(0, 5); // 5개만 표시
-  const hasMore = history.length === 6; // 6개면 더 있다는 뜻
+  const hasMore = history.length > 5;
 
   if (history.length === 0) {
     return (
@@ -78,10 +81,10 @@ const ScheduleSection = ({ onNavigate, setShowHistoryManage }: Props) => {
         </View>
       )}
       <FlatList
-        data={displayHistory}
+        data={displayHistorys}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, {paddingBottom: bottomInset}]}
         renderItem={({ item, index }) => {
           const { date, time } = formatRideTime(item.arrivedAt);
           const isFirst = index === 0;
