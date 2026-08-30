@@ -30,7 +30,7 @@ export const useArriveInfoInBusStop = () => {
         getArriveInfoInBusStop(cityCode, nodeId),
         getBusStopThroghRouteList(cityCode, nodeId)
       ]);
-
+      console.log("nodeID:" , nodeId)
       const arrivalsResult = arriveData.status === 'fulfilled' ? arriveData.value : [];
       const routesResult = routeListData.status === 'fulfilled' ? routeListData.value : [];
       
@@ -39,7 +39,8 @@ export const useArriveInfoInBusStop = () => {
 
       // 경유 노선 목록을 기준으로 도착 정보를 결합
       const combinedData = routeList.map(route => {
-        const arrival = arrivals.find(a => a && a.routeid === route.routeid);
+        const arrival = arrivals.find(a => a && a.routeid === route.routeid && a.arrtime != null) 
+             || arrivals.find(a => a && a.routeid === route.routeid);
         return {
           ...arrival, // 실시간 정보가 있으면 덮어씌움
           routeid: route.routeid,

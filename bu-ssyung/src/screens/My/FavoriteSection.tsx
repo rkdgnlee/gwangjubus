@@ -9,17 +9,23 @@ import { useTicket } from '../../hooks/tickets/TicketContext';
 
 interface Props {
   onNavigate: (type: 'bus' | 'stop', data: any) => void;
-  bottomInset : number;
 }
 
-const FavoriteSection = ({ onNavigate, bottomInset = 0 }: Props) => {
+const FavoriteSection = ({ onNavigate }: Props) => {
   const { favorites, load } = useFavorites();
-  const MAX_FAVORITES = 6;
   const sortedFavorites = [...favorites].sort((a, b) => b.savedAt - a.savedAt);
-  const displayFavorites = sortedFavorites.slice(0, MAX_FAVORITES);
-  const { rewardTickets, tickets, showWarn, dismissWarn } = useTicket();
-  const { isAdLoading, showAd } = useFullScreenAd(); // 👈 2. 광고 상태 가져오기
+  const [isExpanded, setIsExpanded] = React.useState(false);
 
+  // 2. 표시할 개수 및 데이터 계산 (기본 4개, 펼침 시 6개)
+  const initialCount = 4;
+  const maxCount = 6;
+  const displayCount = isExpanded ? maxCount : initialCount;
+  const displayFavorites = sortedFavorites.slice(0, displayCount);
+
+  // 3. 더보기 버튼 노출 조건 (전체 항목이 4개 초과일 때)
+  const hasMore = sortedFavorites.length > initialCount;  const { rewardTickets, tickets, showWarn, dismissWarn } = useTicket();
+  const { isAdLoading, showAd } = useFullScreenAd(); // 👈 2. 광고 상태 가져오기
+  
   React.useEffect(() => { load(); }, []);
 
   const handlePress = (item: IFavorite) => {
@@ -82,9 +88,11 @@ const FavoriteSection = ({ onNavigate, bottomInset = 0 }: Props) => {
         </View>
       )}
 
-      <Text style={styles.headerTitle}>저장해놓은 항목</Text>
+      <Text style={styles.headerTitle}>내 북마크</Text>
       <FlatList
         data={displayFavorites}
+        scrollEnabled={false} // 👈 내부 스크롤 비활성화
+        nestedScrollEnabled={false}
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.row}
@@ -107,8 +115,18 @@ const FavoriteSection = ({ onNavigate, bottomInset = 0 }: Props) => {
             </View>
           </TouchableOpacity>
         )}
-        contentContainerStyle={[styles.listContent, { paddingBottom: bottomInset }]}
+        contentContainerStyle={[styles.listContent ]}
       />
+      {hasMore && (
+        <TouchableOpacity 
+          style={styles.moreButton} 
+          onPress={() => setIsExpanded(!isExpanded)}
+        >
+          <Text style={styles.moreButtonText}>
+            {isExpanded ? '접기 ▲' : `더보기 (${favorites.length}) ▼`}
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -179,6 +197,16 @@ const styles = StyleSheet.create({
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
   emptyTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 8 },
   emptyDesc: { fontSize: 14, color: COLORS.text.hint },
+  moreButton: {
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginTop: 4,
+  },
+  moreButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.text.hint,
+  },
 });
 
 export default FavoriteSection;

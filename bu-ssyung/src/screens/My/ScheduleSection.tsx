@@ -24,22 +24,20 @@ const formatRideTime = (isoString: string) => {
 interface Props {
   onNavigate: (type: 'bus' | 'stop', data: any) => void;
   setShowHistoryManage: (showHistory: boolean) => void;
-  bottomInset : number;
 }
 
-const ScheduleSection = ({ onNavigate, setShowHistoryManage, bottomInset }: Props) => {
+const ScheduleSection = ({ onNavigate, setShowHistoryManage }: Props) => {
   const [history, setHistory] = useState<IBusRideHistory[]>([]);
-  const MAX_HISTORYS = 6;
+  const MAX_HISTORYS = 5; // 👈 1. 최대 표시 개수를 5개로 변경
   const displayHistorys = history.slice(0, MAX_HISTORYS);
   
-  const [showStorageNotice, setShowStorageNotice] = useState(false); // ← 추가
+  const [showStorageNotice, setShowStorageNotice] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       const data = await busHistoryStorage.getRecent();
       setHistory(data);
 
-      // 기록이 있고 안내를 아직 안 봤으면 표시
       if (data.length > 0) {
         const noticed = await Storage.getItem('storage_notice_seen');
         if (!noticed) setShowStorageNotice(true);
@@ -47,11 +45,14 @@ const ScheduleSection = ({ onNavigate, setShowHistoryManage, bottomInset }: Prop
     };
     load();
   }, []);
+
   const dismissNotice = async () => {
     await Storage.setItem('storage_notice_seen', 'true');
     setShowStorageNotice(false);
   };
-  const hasMore = history.length > 5;
+
+  // 👈 2. 전체 탑승 기록이 5개를 초과할 때만 더보기 버튼 노출
+  const hasMore = history.length > MAX_HISTORYS;
 
   if (history.length === 0) {
     return (
@@ -82,12 +83,16 @@ const ScheduleSection = ({ onNavigate, setShowHistoryManage, bottomInset }: Prop
       )}
       <FlatList
         data={displayHistorys}
+        scrollEnabled={false}
+        nestedScrollEnabled={false}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.listContent, {paddingBottom: bottomInset}]}
+        contentContainerStyle={[styles.listContent]}
         renderItem={({ item, index }) => {
           const { date, time } = formatRideTime(item.arrivedAt);
           const isFirst = index === 0;
+          const isLast = index === displayHistorys.length - 1;
+
           return (
             <View style={styles.itemRow}>
               <View style={styles.timeContainer}>
@@ -97,7 +102,8 @@ const ScheduleSection = ({ onNavigate, setShowHistoryManage, bottomInset }: Prop
               <View style={styles.timelineLine}>
                 {!isFirst && <View style={styles.lineTop} />}
                 <View style={styles.dot} />
-                <View style={styles.lineBottom} />
+                {/* 👈 3. 마지막 아이템 밑에는 타임라인 선이 그려지지 않도록 처리 */}
+                {!isLast && <View style={styles.lineBottom} />}
               </View>
               <TouchableOpacity
                 style={styles.infoCard}
@@ -116,8 +122,12 @@ const ScheduleSection = ({ onNavigate, setShowHistoryManage, bottomInset }: Prop
         }}
         ListFooterComponent={
           hasMore ? (
-            <TouchableOpacity style={styles.moreButton} onPress={() => {setShowHistoryManage( true)}}>
-              <Text style={styles.moreButtonText}>탑승 기록 확인하기</Text>
+            <TouchableOpacity 
+              style={styles.moreButton} 
+              onPress={() => setShowHistoryManage(true)} // 👈 HistoryManageScreen으로 이동
+              activeOpacity={0.7}
+            >
+              <Text style={styles.moreButtonText}>전체 탑승 기록 확인하기 ({history.length}개)</Text>
             </TouchableOpacity>
           ) : null
         }

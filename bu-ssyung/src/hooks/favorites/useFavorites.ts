@@ -54,9 +54,21 @@ export const useFavorites = () => {
     await save(next);
   }, [favorites]);
 
-  const removeFavorite = useCallback(async (id: string) => {
+  // 👈 1. 북마크 수정 기능 추가 (이모지, 별칭/메모 등)
+  const updateFavorite = useCallback(async (id: string, updatedItem: IFavorite) => {
+    const next = favorites.map(f => (f.id === id ? updatedItem : f));
+    await save(next);
+  }, [favorites]);
+
+  // 👈 2. 개별 삭제 기능 (remove 및 기존 removeFavorite 함수명 모두 호환)
+  const remove = useCallback(async (id: string) => {
     await save(favorites.filter(f => f.id !== id));
   }, [favorites]);
+
+  // 👈 3. 전체 삭제 기능 추가
+  const removeAll = useCallback(async () => {
+    await save([]);
+  }, []);
 
   const isStopSaved = useCallback((nodeid: string) => {
     return favorites.some(f => f.type === 'stop' && (f as IFavoriteStop).nodeid === nodeid);
@@ -70,5 +82,17 @@ export const useFavorites = () => {
     return type === 'stop' ? `stop_${id}` : `bus_${id}`;
   }, []);
 
-  return { favorites, addStop, addBus, removeFavorite, isStopSaved, isBusSaved, getFavoriteId, load };
+  return {
+    favorites,
+    addStop,
+    addBus,
+    updateFavorite,   // 👈 추가
+    remove,           // 👈 추가
+    removeFavorite: remove, // 👈 기존 코드와의 호환성 유지
+    removeAll,        // 👈 추가
+    isStopSaved,
+    isBusSaved,
+    getFavoriteId,
+    load,
+  };
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, Modal, TouchableOpacity,
   TextInput, KeyboardAvoidingView, Platform, Pressable
@@ -10,21 +10,40 @@ interface SaveModalProps {
   visible: boolean;
   title: string;
   subtitle: string;
+  initialEmoji?: string; // ← 추가: 초기 이모지
+  initialMemo?: string;  // ← 추가: 초기 메모
+  modalTitle?: string;   // ← 추가: '저장하기' 또는 '북마크 편집'
   onClose: () => void;
   onSave: (emoji: string, memo: string) => void;
 }
 
 const DEFAULT_EMOJI = '🔖';
 
-const SaveModal = ({ visible, title, subtitle, onClose, onSave }: SaveModalProps) => {
-  const [emoji, setEmoji] = useState(DEFAULT_EMOJI);
-  const [memo, setMemo] = useState('');
+const SaveModal = ({
+  visible,
+  title,
+  subtitle,
+  initialEmoji = DEFAULT_EMOJI,
+  initialMemo = '',
+  modalTitle = '저장하기',
+  onClose,
+  onSave,
+}: SaveModalProps) => {
+  const [emoji, setEmoji] = useState(initialEmoji);
+  const [memo, setMemo] = useState(initialMemo);
   const [pickerVisible, setPickerVisible] = useState(false);
+
+  // 모달이 열리거나 초깃값이 변경될 때 상태 동기화
+  useEffect(() => {
+    if (visible) {
+      setEmoji(initialEmoji || DEFAULT_EMOJI);
+      setMemo(initialMemo || '');
+    }
+  }, [visible, initialEmoji, initialMemo]);
 
   const handleSave = () => {
     onSave(emoji, memo);
-    setMemo('');
-    setEmoji(DEFAULT_EMOJI);
+    onClose();
   };
 
   return (
@@ -32,21 +51,18 @@ const SaveModal = ({ visible, title, subtitle, onClose, onSave }: SaveModalProps
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.overlay}>
         <Pressable style={styles.overlayBg} onPress={onClose} />
         <View style={styles.sheet}>
-          <Text style={styles.sheetTitle}>저장하기</Text>
+          <Text style={styles.sheetTitle}>{modalTitle}</Text>
 
           {/* 이모지 + 정보 한 row */}
           <View style={styles.emojiInfoRow}>
-            {/* 이모지 동그라미 - 클릭 시 피커 열림 */}
             <TouchableOpacity 
               style={styles.emojiCircleWrapper} 
               onPress={() => setPickerVisible(true)}
             >
               <Text style={styles.emojiText}>{emoji}</Text>
-              {/* 편집 가능 표시 dot */}
               <View style={styles.editDot} />
             </TouchableOpacity>
 
-            {/* 오른쪽 정보 */}
             <View style={styles.infoTextWrapper}>
               <Text style={styles.infoTitle}>{title}</Text>
               <Text style={styles.infoSub}>{subtitle}</Text>
@@ -59,9 +75,9 @@ const SaveModal = ({ visible, title, subtitle, onClose, onSave }: SaveModalProps
             style={styles.memoInput}
             value={memo}
             onChangeText={setMemo}
-            placeholder="예: 출근길, 버스 놓쳤을 때..."
+            placeholder="예: 출근길, 집 앞 정류장..."
             placeholderTextColor={COLORS.text.muted}
-            maxLength={8}
+            maxLength={12}
           />
 
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>

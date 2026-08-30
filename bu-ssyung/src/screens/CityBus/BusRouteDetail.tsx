@@ -11,14 +11,13 @@ import SaveModal from '../../components/SaveModal';
 import MenuBottomSheet from '../../components/MenuBottomSheet';
 import { COLORS } from '../../constants/theme';
 
-
 interface BusRouteDetailProps {
   busInfo: any;
   cityName: string;
   cityCode: number;
   onBack: () => void;
   onStopPress: (stopInfo: any) => void;
-  targetNodeId?: string; // ← 추가
+  targetNodeId?: string;
 }
 
 const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targetNodeId }: BusRouteDetailProps) => {
@@ -62,13 +61,13 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
 
   const handleUnsave = async () => {
     const favoriteId = getFavoriteId('bus', busInfo.routeid);
-      if (!favoriteId) {
-          console.warn('favoriteId not found');
-          setMenuVisible(false);
-          return;
-      }
-      await removeFavorite(favoriteId);
+    if (!favoriteId) {
+      console.warn('favoriteId not found');
       setMenuVisible(false);
+      return;
+    }
+    await removeFavorite(favoriteId);
+    setMenuVisible(false);
   };
 
   const handleOpenSaveModal = () => {
@@ -76,69 +75,55 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
     setSaveModalVisible(true);
   };
 
+  // 💡 안전한 locationMap 생성 (부산 등 nodeid가 undefined/숫자인 경우 예외 처리)
   const locationMap: Record<string, IBusLocation[]> = {};
-  locations.forEach(loc => {
-    if (!loc || !loc.nodeid) return; // ← 추가
-      if (!locationMap[loc.nodeid]) locationMap[loc.nodeid] = [];
-      const mapId = locationMap[loc.nodeid]! 
-      mapId.push(loc);
-  });
+  if (Array.isArray(locations)) {
+    locations.forEach(loc => {
+      if (!loc || loc.nodeid == null) return;
+      const key = String(loc.nodeid);
+      if (!locationMap[key]) locationMap[key] = [];
+      locationMap[key].push(loc);
+    });
+  }
 
   const sortedStops = [...stops].sort((a, b) => a.nodeord - b.nodeord);
   const listData: any[] = sortedStops.map(s => ({ ...s, __type: 'stop' }));
 
-  // 기존 useEffect 아래에 추가
   useEffect(() => {
     if (!targetNodeId || listData.length === 0) return;
     
-    const index = listData.findIndex(item => item.nodeid === targetNodeId);
+    const index = listData.findIndex(item => String(item.nodeid) === String(targetNodeId));
     if (index !== -1) {
-      // 데이터 렌더링 후 스크롤하도록 약간 딜레이
       setTimeout(() => {
         flatListRef.current?.scrollToIndex({
           index,
           animated: true,
-          viewPosition: 0.5, // 화면 정가운데
+          viewPosition: 0.5,
         });
       }, 300);
     }
   }, [targetNodeId, listData]);
 
   const renderStop = (item: IBusViaRoute, index: number, sectionStops: IBusViaRoute[]) => {
-    const busesHere = locationMap[item.nodeid] || [];
+    const busesHere = locationMap[String(item.nodeid)] || [];
     const isFirst = index === 0;
     const isLast = index === sectionStops.length - 1;
-    const isTarget = item.nodeid === targetNodeId;
+    const isTarget = String(item.nodeid) === String(targetNodeId);
+
     return (
       <View style={styles.itemContainer}>
-        {busesHere.map((bus) => (
-          <View key={bus.vehicleno} style={styles.busRow}>
-            <View style={styles.timelineSection}>
-              {!isFirst && <View style={[styles.line, styles.lineTop]} />}
-              <View style={[styles.line, styles.lineBottom]} />
-              <View style={[styles.busIconWrapper, { backgroundColor: busColor }]}>
-                <Text style={styles.busIconEmoji}>🚌</Text>
-              </View>
-            </View>
-            <View style={styles.busInfoSection}>
-              <View style={styles.busInfoCard}>
-                <Text style={styles.plateNo}>{bus.vehicleno}</Text>
-              </View>
-            </View>
-          </View>
-        ))}
-
+        {/* 1. 정류장 표시 */}
         <TouchableOpacity
           style={[
-          styles.stationRow,
-          isTarget && styles.targetStationRow 
+            styles.stationRow,
+            isTarget && styles.targetStationRow 
           ]}
           onPress={() => onStopPress(item)}
           activeOpacity={0.6}
         >
           <View style={styles.timelineSection}>
-            {(isFirst && busesHere.length === 0) ? null : <View style={[styles.line, styles.lineTop]} />}
-            {!isLast && <View style={[styles.line, styles.lineBottom]} />}
+            {!isFirst && <View style={[styles.line, styles.lineTop]} />}
+            {(!isLast || busesHere.length > 0) && <View style={[styles.line, styles.lineBottom]} />}
             <View style={[styles.nodeCircle, isFirst || isLast ? styles.nodeCircleEnd : {}]}>
               {(isFirst || isLast) && <View style={[styles.innerDot, { backgroundColor: busColor }]} />}
             </View>
@@ -151,6 +136,24 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
             <Text style={styles.chevron}>›</Text>
           </View>
         </TouchableOpacity>
+
+        {/* 2. 버스 위치 표시 (정류장 '아래'로 이동) */}
+        {busesHere.map((bus) => (
+          <View key={bus.vehicleno} style={styles.busRow}>
+            <View style={styles.timelineSection}>
+              <View style={[styles.line, styles.lineTop]} />
+              {!isLast && <View style={[styles.line, styles.lineBottom]} />}
+              <View style={[styles.busIconWrapper, { backgroundColor: busColor }]}>
+                <Text style={styles.busIconEmoji}>🚌</Text>
+              </View>
+            </View>
+            <View style={styles.busInfoSection}>
+              <View style={styles.busInfoCard}>
+                <Text style={styles.plateNo}>{bus.vehicleno}</Text>
+              </View>
+            </View>
+          </View>
+        ))}
       </View>
     );
   };
@@ -175,10 +178,7 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
       </View>
     );
   }
-  // TODO 부산에서 nodeid가 안나오는 사고 발생. ypeError: Cannot read property 'nodeid' of undefined
-    // at anonymous (&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server&app=com.sardinespicysalad.gwangjubus:101758:27)
-    // at forEach (native)
-    // at BusRouteDetail (&platform=ios&dev=true&lazy=true&minify=false&inlineSourceMap=false&modulesOnly=false&runModule=true&excludeSource=true&sourcePaths=url-server&app=com.sardinespicysalad.gwangjubus:101757:22)
+
   return (
     <View style={styles.container}>
       {/* 헤더 */}
@@ -202,7 +202,6 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
             </Text>
           )}
         </View>
-        {/* 메뉴 버튼 */}
         <TouchableOpacity style={styles.menuButton} onPress={() => setMenuVisible(true)}>
           <Text style={styles.menuText}>•••</Text>
         </TouchableOpacity>
@@ -229,7 +228,7 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
         }
       />
 
-      {/* 공통 메뉴 바텀시트 적용 */}
+      {/* 바텀시트 메뉴 */}
       <MenuBottomSheet
         visible={menuVisible}
         onClose={() => setMenuVisible(false)}
@@ -238,7 +237,7 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
         isSaved={saved}
       />
 
-      {/* 저장 Modal - SaveModal로 교체 */}
+      {/* 저장 모달 */}
       <SaveModal
         visible={saveModalVisible}
         title={busInfo.routeno}
@@ -319,73 +318,11 @@ const styles = StyleSheet.create({
   nodeNo: { fontSize: 13, color: COLORS.text.hint, marginTop: 2 },
   chevron: { fontSize: 24, color: COLORS.text.muted },
 
-  dividerContainer: {
-    flexDirection: 'row', alignItems: 'center',
-    marginVertical: 16, paddingHorizontal: 4,
-  },
-  dividerLine: { flex: 1, height: 1, backgroundColor: COLORS.primary },
-  dividerBadge: {
-    backgroundColor: COLORS.primary, paddingHorizontal: 12,
-    paddingVertical: 6, borderRadius: 20, marginHorizontal: 8,
-  },
-  dividerText: { fontSize: 13, color: COLORS.text.white, fontWeight: 'bold' },
-
-  overlay: { flex: 1, justifyContent: 'flex-end' },
-  overlayBg: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },
-
-  menuSheet: {
-    backgroundColor: COLORS.text.white, borderTopLeftRadius: 20, borderTopRightRadius: 20,
-    padding: 20, paddingBottom: 40,
-  },
-  menuItem: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  menuItemText: { fontSize: 17, color: COLORS.text.main, fontWeight: '500' },
-
-  saveSheet: {
-    backgroundColor: COLORS.text.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 24, paddingBottom: 40,
-  },
-  saveSheetTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 16 },
-  infoBox: { backgroundColor: COLORS.background, borderRadius: 12, padding: 14, marginBottom: 20 },
-  infoTitle: { fontSize: 17, fontWeight: 'bold', color: COLORS.text.main },
-  infoSub: { fontSize: 13, color: COLORS.text.hint, marginTop: 4 },
-  inputLabel: { fontSize: 14, fontWeight: '600', color: COLORS.text.sub, marginBottom: 8 },
-  emojiRow: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.background, borderRadius: 12,
-    padding: 14, marginBottom: 20,
-  },
-  emojiInput: { fontSize: 32, marginRight: 12, minWidth: 44 },
-  emojiHint: { fontSize: 14, color: COLORS.text.hint },
-  memoInput: {
-    backgroundColor: COLORS.background, borderRadius: 12,
-    padding: 14, fontSize: 16, color: COLORS.text.main, marginBottom: 24,
-  },
-  saveButton: { backgroundColor: COLORS.primary, borderRadius: 14, padding: 16, alignItems: 'center' },
-  saveButtonText: { fontSize: 17, fontWeight: 'bold', color: COLORS.text.white },
-
-  // styles.StyleSheet.create 안에 추가
   targetStationRow: {
     backgroundColor: COLORS.primaryLight,
     borderRadius: 12,
     marginHorizontal: -8,
     paddingHorizontal: 8,
-  },
-  targetNodeCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderColor: COLORS.primary,
-    borderWidth: 2.5,
-    marginTop: -9,
-  },
-  targetStopName: {
-    color: COLORS.text.main,
-    fontWeight: 'bold',
-  },
-  targetBadgeText: {
-    fontSize: 12,
-    color: COLORS.primary,
-    fontWeight: '600',
   },
 });
 
