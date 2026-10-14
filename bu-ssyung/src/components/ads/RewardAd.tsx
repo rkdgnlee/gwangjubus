@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Modal,
   ActivityIndicator,
   Alert,
 } from 'react-native';
@@ -135,51 +134,51 @@ export const RewardAd = ({ tickets, onReward, onClose }: RewardAdProps) => {
   };
 
   return (
-    <Modal visible transparent animationType="fade" onRequestClose={handleClose}>
-      <View style={styles.overlay}>
-        <View style={styles.container}>
-          <Text style={styles.title}>티켓이 모두 소모되었어요 🎫</Text>
-          <Text style={styles.description}>
-            광고를 시청하면 버스 도착 정보를 즉시 확인할 수 있는 티켓이 무료로 충전됩니다.
-          </Text>
+    // RN Modal 위에서는 전면 광고 표시가 실패하므로 일반 View 오버레이로 띄운다
+    <View style={styles.overlay}>
+      <View style={styles.container}>
+        <Text style={styles.title}>티켓이 모두 소모되었어요 🎫</Text>
+        <Text style={styles.description}>
+          광고를 시청하면 버스 도착 정보를 즉시 확인할 수 있는 티켓이 무료로 충전됩니다.
+        </Text>
 
-          <View style={styles.ticketBadge}>
-            <Text style={styles.ticketText}>현재 보유 티켓: {tickets}개</Text>
-          </View>
-
-          {isLoading ? (
-            <View style={styles.loadingArea}>
-              <ActivityIndicator size="large" color="#31D698" />
-              <Text style={styles.loadingText}>광고 불러오는 중...</Text>
-            </View>
-          ) : (
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.rewardButton}
-                onPress={handleStartAd}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.rewardButtonText}>🎬 광고 보고 무료 충전</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={handleClose}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.closeButtonText}>닫기</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+        <View style={styles.ticketBadge}>
+          <Text style={styles.ticketText}>현재 보유 티켓: {tickets}개</Text>
         </View>
+
+        {isLoading ? (
+          <View style={styles.loadingArea}>
+            <ActivityIndicator size="large" color="#31D698" />
+            <Text style={styles.loadingText}>광고 불러오는 중...</Text>
+          </View>
+        ) : (
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.rewardButton}
+              onPress={handleStartAd}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.rewardButtonText}>🎬 광고 보고 무료 충전</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={handleClose}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.closeButtonText}>닫기</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
-    </Modal>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 10,
     backgroundColor: 'rgba(0, 0, 0, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',

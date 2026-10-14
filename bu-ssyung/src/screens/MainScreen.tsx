@@ -19,7 +19,8 @@ import { useToast } from '@toss/tds-react-native';
 import { getSpecifyArriveInfoInBusStop } from '../services/api-service-proxy';
 import { TossBanner } from '../components/ads/TossBanner';
 import { HomeAddTooltip } from '../components/HomeAddTooltip';
-import { HomeIcon, BusIcon, SettingsIcon } from '../components/TabIcons'; // 경로 맞게 조정
+import { HomeIcon, BusIcon, SettingsIcon } from '../components/TabIcons';
+import { InAppBackProvider } from '../hooks/useBackHandler';
 
 interface MainProps {
   cityName: string;
@@ -273,43 +274,54 @@ const MainScreen = ({ cityName, cityCode, onReset }: MainProps) => {
     }
   };
 
+  // 상단 내비게이션 바 뒤로가기: 하위 화면이 처리하지 않으면 다른 탭 → 홈 탭, 홈이면 미니앱 닫기
+  const goHomeTab =
+    activeTab !== 'My'
+      ? () => {
+          setActiveTab('My');
+          setCityBusInitData(null);
+        }
+      : null;
+
   return (
-    <View style={styles.container}>
-      <View style={styles.bannerContainer}>
-        <TossBanner />
+    <InAppBackProvider fallback={goHomeTab}>
+      <View style={styles.container}>
+        <View style={styles.bannerContainer}>
+          <TossBanner />
+        </View>
+        <View style={styles.contentArea}>
+          {renderContent()}
+        </View>
+        <View
+          style={[
+            styles.bottomNav,
+            {
+              bottom: insets.bottom + TAB_BAR_BOTTOM_MARGIN,
+              left: TAB_BAR_SIDE_MARGIN,
+              right: TAB_BAR_SIDE_MARGIN,
+              height: TAB_BAR_HEIGHT,
+            },
+          ]}
+        >
+          {(['My', 'CityBus', 'Settings'] as TabType[]).map(tab => (
+            <TabButton
+              key={tab}
+              tab={tab}
+              isActive={activeTab === tab}
+              onPress={() => {
+                if (activeTab === tab && tab === 'CityBus') {
+                  setCityBusKey(prev => prev + 1);
+                  setCityBusInitData(null);
+                } else {
+                  setActiveTab(tab);
+                  if (tab !== 'CityBus') setCityBusInitData(null);
+                }
+              }}
+            />
+          ))}
+        </View>
       </View>
-      <View style={styles.contentArea}>
-        {renderContent()}
-      </View>
-      <View
-        style={[
-          styles.bottomNav,
-          {
-            bottom: insets.bottom + TAB_BAR_BOTTOM_MARGIN,
-            left: TAB_BAR_SIDE_MARGIN,
-            right: TAB_BAR_SIDE_MARGIN,
-            height: TAB_BAR_HEIGHT,
-          },
-        ]}
-      >
-        {(['My', 'CityBus', 'Settings'] as TabType[]).map(tab => (
-          <TabButton
-            key={tab}
-            tab={tab}
-            isActive={activeTab === tab}
-            onPress={() => {
-              if (activeTab === tab && tab === 'CityBus') {
-                setCityBusKey(prev => prev + 1);
-                setCityBusInitData(null);
-              } else {
-                setActiveTab(tab);
-                if (tab !== 'CityBus') setCityBusInitData(null);
-              }
-            }}
-          />
-        ))}
-      </View>
-    </View>
+    </InAppBackProvider>
   );
 };
 
@@ -336,8 +348,8 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 10,
   },
-  tabButton: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  tabText: { fontSize: 11, marginTop: 2 },
+  tabButton: { flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'center' },
+  tabText: { fontSize: 12, marginTop: 2 },
 });
 
 export default MainScreen;

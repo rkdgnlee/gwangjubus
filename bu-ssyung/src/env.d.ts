@@ -7,6 +7,7 @@ type Env = {
   API_STOP_URL: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
+  TEST_ZERO_TICKETS: string;
 };
 
 interface ImportMeta {

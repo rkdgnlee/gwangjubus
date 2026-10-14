@@ -107,7 +107,7 @@ const BusResultList = ({ data, mode, cityName, onPressItem }: BusResultListProps
 };
 
 const styles = StyleSheet.create({
-  listContent: { padding: 20 },
+  listContent: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 120 },
   itemContainer: {
     backgroundColor: COLORS.text.white,
     padding: 16,
@@ -137,13 +137,13 @@ const styles = StyleSheet.create({
     width: '48%', // 👈 추가된 부분
   },
   directionLabel: { fontSize: 15, color: COLORS.text.main, fontWeight: '500' },
-  directionText: { fontSize: 12, color: COLORS.text.hint, marginBottom: 2 },
+  directionText: { fontSize: 13, color: COLORS.text.hint, marginBottom: 2 },
   stopName: { fontSize: 17, fontWeight: 'bold', color: COLORS.text.main },
   stopNo: { fontSize: 13, color: COLORS.text.hint, marginTop: 2 },
   routeList: { marginTop: 8, gap: 4 },
-  routeText: { fontSize: 12, color: COLORS.text.sub },
+  routeText: { fontSize: 13, color: COLORS.text.sub },
   routeNo: { color: COLORS.text.main },
-  moreRoutes: { fontSize: 12, color: COLORS.primary, fontWeight: '600', marginTop: 2 },
+  moreRoutes: { fontSize: 13, color: COLORS.primary, fontWeight: '600', marginTop: 2 },
   emptyContainer: { alignItems: 'center', marginTop: 50 },
   emptyText: { color: COLORS.text.muted, fontSize: 16 },
 });

@@ -22,7 +22,8 @@ export default defineConfig({
       API_BUS_LOCATION_URL: process.env.API_BUS_LOCATION_URL ?? '',
       API_STOP_URL: process.env.API_STOP_URL ?? '',
       SUPABASE_URL: process.env.SUPABASE_URL ?? '',
-      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ?? ''
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ?? '',
+      TEST_ZERO_TICKETS: process.env.TEST_ZERO_TICKETS ?? '',
     }),
   ],
 });

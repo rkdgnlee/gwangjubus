@@ -10,17 +10,17 @@ import { IBusViaRoute, IBusLocation } from '../../types/bus';
 import SaveModal from '../../components/SaveModal';
 import MenuBottomSheet from '../../components/MenuBottomSheet';
 import { COLORS } from '../../constants/theme';
+import { ChevronRight, MoreIcon } from '../../components/Icons';
 
 interface BusRouteDetailProps {
   busInfo: any;
   cityName: string;
   cityCode: number;
-  onBack: () => void;
   onStopPress: (stopInfo: any) => void;
   targetNodeId?: string;
 }
 
-const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targetNodeId }: BusRouteDetailProps) => {
+const BusRouteDetail = ({ busInfo, cityName, cityCode, onStopPress, targetNodeId }: BusRouteDetailProps) => {
   const busColor = getBusTypeColor(cityName, busInfo.routetp);
   const { info, stops, locations, loading, error, fetch, refreshLocations } = useBusRouteDetail();
   const { addBus, removeFavorite, isBusSaved, getFavoriteId, load } = useFavorites();
@@ -133,7 +133,7 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
               <Text style={[styles.stopName, (isFirst || isLast) && styles.stopNameEnd]}>{item.nodenm}</Text>
               <Text style={styles.nodeNo}>{item.nodeno}</Text>
             </View>
-            <Text style={styles.chevron}>›</Text>
+            <ChevronRight color={COLORS.text.muted} />
           </View>
         </TouchableOpacity>
 
@@ -181,11 +181,8 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
 
   return (
     <View style={styles.container}>
-      {/* 헤더 */}
+      {/* 노선 요약 — 뒤로가기는 앱인토스 상단 내비게이션 바가 담당 */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Text style={styles.backText}>←</Text>
-        </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <View style={styles.headerBusTitleRow}>
             <Text style={[styles.headerBusName, { color: busColor }]}>{busInfo.routeno}</Text>
@@ -202,8 +199,12 @@ const BusRouteDetail = ({ busInfo, cityName, cityCode, onBack, onStopPress, targ
             </Text>
           )}
         </View>
-        <TouchableOpacity style={styles.menuButton} onPress={() => setMenuVisible(true)}>
-          <Text style={styles.menuText}>•••</Text>
+        <TouchableOpacity
+          style={styles.menuButton}
+          onPress={() => setMenuVisible(true)}
+          accessibilityLabel="더보기"
+        >
+          <MoreIcon color={COLORS.text.sub} />
         </TouchableOpacity>
       </View>
 
@@ -254,24 +255,23 @@ const styles = StyleSheet.create({
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 15,
+    alignItems: 'flex-start',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
     backgroundColor: COLORS.text.white,
   },
-  backButton: { marginRight: 15, padding: 5 },
-  backText: { fontSize: 24, color: COLORS.text.main },
   headerBusTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
   headerBusName: { fontSize: 24, fontWeight: 'bold' },
   routeTypeBadge: { marginLeft: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   routeTypeSmall: { fontSize: 14, fontWeight: '700' },
   headerDirection: { fontSize: 15, color: COLORS.text.sub, marginTop: 2 },
-  headerInterval: { fontSize: 13, color: COLORS.primary, marginTop: 4, fontWeight: '600' },
-  menuButton: { padding: 8, marginLeft: 8 },
-  menuText: { fontSize: 20, color: COLORS.text.main, fontWeight: 'bold', letterSpacing: 2 },
+  headerInterval: { fontSize: 14, color: COLORS.primary, marginTop: 6, fontWeight: '600' },
+  menuButton: { width: 44, height: 44, marginLeft: 8, marginRight: -10, justifyContent: 'center', alignItems: 'center' },
 
-  listContent: { paddingVertical: 20, paddingHorizontal: 20 },
+  listContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 120 },
   itemContainer: { flexDirection: 'column' },
   busRow: { flexDirection: 'row', height: 60 },
   stationRow: { flexDirection: 'row', height: 56 },
@@ -316,7 +316,6 @@ const styles = StyleSheet.create({
   stopName: { fontSize: 18, color: COLORS.text.main },
   stopNameEnd: { fontWeight: 'bold', color: COLORS.text.main, fontSize: 19 },
   nodeNo: { fontSize: 13, color: COLORS.text.hint, marginTop: 2 },
-  chevron: { fontSize: 24, color: COLORS.text.muted },
 
   targetStationRow: {
     backgroundColor: COLORS.primaryLight,

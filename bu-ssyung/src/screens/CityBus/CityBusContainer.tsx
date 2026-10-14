@@ -10,6 +10,8 @@ import { useSearchHistory } from '../../hooks/search/useSearchHistory';
 import { COLORS } from '../../constants/theme';
 import { RewardAd } from '../../components/ads/RewardAd';
 import { useTicket } from '../../hooks/tickets/TicketContext';
+import { useBackHandler } from '../../hooks/useBackHandler';
+import { CloseIcon } from '../../components/Icons';
 
 interface Props {
   cityName: string;
@@ -111,6 +113,16 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
     setNavStack(prev => prev.slice(0, -1));
   };
 
+  // 상단 내비게이션 바 뒤로가기: 광고 화면 닫기 → 상세 화면 스택 pop
+  useBackHandler(showAdPhase || navStack.length > 0, () => {
+    if (showAdPhase) {
+      setShowAdPhase(false);
+      setPendingScreen(null);
+      return;
+    }
+    popScreen();
+  });
+
   const handleSearch = useCallback(async (text?: string) => {
     const query = text ?? searchText;
     if (!query.trim()) return;
@@ -143,7 +155,6 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
           busInfo={currentScreen.data}
           cityName={cityName}
           cityCode={cityCode}
-          onBack={popScreen}
           onStopPress={(stop) => pushScreen('stop', stop)}
           targetNodeId={currentScreen.data.fromNodeId}
         />
@@ -154,7 +165,6 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
           stopInfo={currentScreen.data}
           cityName={cityName}
           cityCode={cityCode}
-          onBack={popScreen}
           onBusPress={(bus) => pushScreen('bus', bus)}
           activeAlarmId={activeAlarmId}
           onToggleAlarm={onToggleAlarm}
@@ -249,6 +259,7 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
               <FlatList
                 data={history}
                 keyExtractor={(item) => item.query + item.timestamp}
+                contentContainerStyle={{ paddingBottom: 120 }}
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     style={styles.historyItem}
@@ -258,8 +269,12 @@ const CityBusContainer = ({ cityName, cityCode, initialData, activeAlarmId, onTo
                     }}
                   >
                     <Text style={styles.historyItemText}>🕐 {item.query}</Text>
-                    <TouchableOpacity onPress={() => removeHistory(item.query)}>
-                      <Text style={styles.historyDeleteBtn}>✕</Text>
+                    <TouchableOpacity
+                      onPress={() => removeHistory(item.query)}
+                      style={styles.historyDeleteBtn}
+                      accessibilityLabel="검색 기록 삭제"
+                    >
+                      <CloseIcon color={COLORS.text.muted} />
                     </TouchableOpacity>
                   </TouchableOpacity>
                 )}
@@ -278,9 +293,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingTop: 15,
-    paddingBottom: 15,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 4,
     backgroundColor: COLORS.text.white,
   },
   toggleButtons: {
@@ -289,7 +304,9 @@ const styles = StyleSheet.create({
   },
   ticketBadge: {
     position: 'relative',
-    paddingHorizontal: 10,
+    minHeight: 36,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: COLORS.background,
     borderRadius: 20,
@@ -297,7 +314,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
   ticketText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.text.main,
   },
@@ -312,22 +329,22 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   tooltipText: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.text.white,
     lineHeight: 18,
   },
   toggleBtn: {
-    marginRight: 10,
-    paddingVertical: 12,
+    minHeight: 44,
+    justifyContent: 'center',
     paddingHorizontal: 16,
-    borderRadius: 20,
+    borderRadius: 22,
     backgroundColor: COLORS.border,
   },
   toggleBtnActive: { backgroundColor: COLORS.primary },
-  toggleText: { color: COLORS.text.hint, fontWeight: '600', fontSize: 14 },
+  toggleText: { color: COLORS.text.sub, fontWeight: '600', fontSize: 15 },
   toggleTextActive: { color: COLORS.text.white, fontWeight: 'bold' },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  historyContainer: { flex: 1, paddingHorizontal: 20, paddingTop: 10 },
+  historyContainer: { flex: 1, paddingHorizontal: 20, paddingTop: 8 },
   historyHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -335,18 +352,19 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   historyTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.text.sub },
-  clearHistoryText: { fontSize: 13, color: COLORS.text.muted },
+  clearHistoryText: { fontSize: 14, color: COLORS.text.hint, paddingVertical: 12, paddingLeft: 12 },
   historyItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 15,
+    paddingLeft: 4,
+    minHeight: 56,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
   historyItemText: { fontSize: 16, color: COLORS.text.main },
-  historyDeleteBtn: { fontSize: 14, color: COLORS.text.muted, paddingHorizontal: 8 },
-  emptyHistory: { color: COLORS.text.muted, fontSize: 14, textAlign: 'center', marginTop: 30 },
+  historyDeleteBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
+  emptyHistory: { color: COLORS.text.hint, fontSize: 15, textAlign: 'center', marginTop: 32 },
 });
 
 export default CityBusContainer;

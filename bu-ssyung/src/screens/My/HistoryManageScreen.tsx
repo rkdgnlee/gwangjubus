@@ -8,6 +8,7 @@ import { Storage } from '@apps-in-toss/framework';
 import { IBusRideHistory } from '../../types/IBusRideHistory';
 import { COLORS } from '../../constants/theme';
 import { busHistoryStorage } from '../../utils/busHistoryStorage';
+import { CloseIcon } from '../../components/Icons';
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -25,11 +26,7 @@ const formatRideTime = (isoString: string) => {
   };
 };
 
-interface Props {
-  onBack: () => void;
-}
-
-const HistoryManageScreen = ({ onBack }: Props) => {
+const HistoryManageScreen = () => {
   const [history, setHistory] = useState<IBusRideHistory[]>([]);
 
   useEffect(() => {
@@ -81,18 +78,13 @@ const HistoryManageScreen = ({ onBack }: Props) => {
 
   return (
     <View style={styles.container}>
-      {/* 헤더 */}
+      {/* 화면 제목 — 뒤로가기는 앱인토스 상단 내비게이션 바가 담당 */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Text style={styles.backText}>←</Text>
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>탑승 기록 관리</Text>
-        {history.length > 0 ? (
+        {history.length > 0 && (
           <TouchableOpacity onPress={handleRemoveAll} style={styles.deleteAllButton}>
             <Text style={styles.deleteAllText}>전체 삭제</Text>
           </TouchableOpacity>
-        ) : (
-          <View style={{ width: 64 }} />
         )}
       </View>
 
@@ -121,9 +113,9 @@ const HistoryManageScreen = ({ onBack }: Props) => {
                 <TouchableOpacity
                   style={styles.deleteButton}
                   onPress={() => handleRemove(item)}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityLabel="탑승 기록 삭제"
                 >
-                  <Text style={styles.deleteButtonText}>✕</Text>
+                  <CloseIcon color={COLORS.text.muted} />
                 </TouchableOpacity>
               </View>
             );
@@ -140,23 +132,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 15,
-    fontSize: 20,
-    backgroundColor: COLORS.text.white,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    paddingLeft: 20,
+    paddingRight: 8,
+    paddingTop: 20,
+    paddingBottom: 4,
   },
-  backButton: { padding: 5, width: 40 },
-  backText: { fontSize: 24, color: COLORS.text.main },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.text.main },
-  deleteAllButton: { paddingVertical: 6, paddingHorizontal: 10 },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.text.main },
+  deleteAllButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 },
   deleteAllText: { fontSize: 14, color: COLORS.accent, fontWeight: '600' },
 
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyEmoji: { fontSize: 48, marginBottom: 16 },
   emptyText: { fontSize: 16, color: COLORS.text.hint },
 
-  listContent: { padding: 20 },
+  listContent: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 120 },
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -164,11 +153,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   itemLeft: { flex: 1, flexDirection: 'row', alignItems: 'center' },
   itemDot: {
@@ -176,11 +162,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary, marginRight: 14,
   },
   itemInfo: { flex: 1 },
-  itemBusNo: { fontSize: 16, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 3 },
-  itemStop: { fontSize: 14, color: COLORS.text.sub, marginBottom: 3 },
-  itemTime: { fontSize: 12, color: COLORS.text.hint },
-  deleteButton: { padding: 8 },
-  deleteButtonText: { fontSize: 16, color: COLORS.text.muted, fontWeight: '600' },
+  itemBusNo: { fontSize: 17, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 4 },
+  itemStop: { fontSize: 15, color: COLORS.text.sub, marginBottom: 4 },
+  itemTime: { fontSize: 13, color: COLORS.text.hint },
+  deleteButton: { width: 44, height: 44, marginRight: -8, justifyContent: 'center', alignItems: 'center' },
 });
 
 export default HistoryManageScreen;

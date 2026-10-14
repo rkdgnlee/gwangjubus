@@ -14,10 +14,12 @@ import { storage } from '../../utils/storage';
 import HistoryManageScreen from '../My/HistoryManageScreen';
 import FavoriteManageScreen from '../My/FavoriteManageScreen';
 import { COLORS } from '../../constants/theme';
-import { version } from '../../../package.json';
+import updateNotes from '../../constants/updateNotes.json';
 import { requestReview } from '@apps-in-toss/framework';
-import { useFullScreenAd } from '../../hooks/ticket/useFullScreenAd';
 import { useTicket } from '../../hooks/tickets/TicketContext';
+import { useFullScreenAd } from '../../hooks/ticket/useFullScreenAd';
+import { useBackHandler } from '../../hooks/useBackHandler';
+import { ChevronRight } from '../../components/Icons';
 
 interface SettingsProps {
   cityName: string;
@@ -35,6 +37,11 @@ const SettingsContainer = ({
   const [showHistoryManage, setShowHistoryManage] = useState(initialShowHistoryManage);
   const [showFavoriteManage, setShowFavoriteManage] = useState(false);
   const [showTicketDialog, setShowTicketDialog] = useState(false);
+  const [showUpdateNotes, setShowUpdateNotes] = useState(false);
+
+  // 업데이트 내역은 src/constants/updateNotes.json 에서 관리 (최신이 맨 앞)
+  const latestUpdate = updateNotes[0]!;
+  const previousUpdate = updateNotes[1];
 
   const { tickets } = useTicket();
   const { isAdLoading, showAd } = useFullScreenAd();
@@ -43,13 +50,6 @@ const SettingsContainer = ({
   useEffect(() => {
     onDidMount?.();
   }, []);
-
-  const handleFeatureNotice = () => {
-    Alert.alert(
-      '준비 중인 기능',
-      '실제 버스 탑승 기록을 기반으로 나만의 이동 타임라인을 만드는 기능이 업데이트될 예정입니다.'
-    );
-  };
 
   const handleRegionChange = () => {
     Alert.alert('지역 변경', '지역을 변경하시겠습니까?\n처음 화면으로 돌아갑니다.', [
@@ -90,34 +90,46 @@ const SettingsContainer = ({
     setShowTicketDialog(false);
   };
 
+  // 상단 내비게이션 바 뒤로가기: 하위 관리 화면 → 설정 메인
+  useBackHandler(showHistoryManage || showFavoriteManage, () => {
+    setShowHistoryManage(false);
+    setShowFavoriteManage(false);
+  });
+
   if (showHistoryManage) {
-    return <HistoryManageScreen onBack={() => setShowHistoryManage(false)} />;
+    return <HistoryManageScreen />;
   }
 
   if (showFavoriteManage) {
-    return <FavoriteManageScreen onBack={() => setShowFavoriteManage(false)} />;
+    return <FavoriteManageScreen />;
   }
 
   return (
-    <ScrollView style={styles.container}>
-      {/* 상단 프로필 영역 */}
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <Text style={styles.pageTitle}>설정</Text>
+
+      {/* 업데이트 소식 카드 — 누르면 업데이트 내용 다이얼로그 */}
       <TouchableOpacity
         style={styles.profileSection}
-        onPress={handleFeatureNotice}
+        onPress={() => setShowUpdateNotes(true)}
         activeOpacity={0.8}
+        accessibilityLabel="업데이트 내용 보기"
       >
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>🗓️</Text>
         </View>
         <View style={styles.profileInfo}>
           <Text style={styles.featureTitle}>버쓩-전국 시내 버스</Text>
-          <Text style={styles.featureDesc}>
-            내 기록을 저장하고{'\n'}나만의 버스 기록을 저장해보세요
+          <Text style={styles.featureDesc} numberOfLines={1}>
+            {latestUpdate.summary}
+          </Text>
+          <Text style={styles.updateDate}>
+            최근 업데이트 {latestUpdate.date}
+            {previousUpdate ? ` · 이전 ${previousUpdate.date}` : ''}
           </Text>
         </View>
+        <ChevronRight color={COLORS.text.muted} />
       </TouchableOpacity>
-
-      <View style={styles.divider} />
 
       {/* 메뉴 리스트 */}
       <View style={styles.menuContainer}>
@@ -133,7 +145,7 @@ const SettingsContainer = ({
               <Text style={styles.itemSub}>현재 {tickets ?? 0}개 보유 중</Text>
             </View>
           </View>
-          <Text style={styles.itemArrow}>›</Text>
+          <ChevronRight color={COLORS.text.muted} />
         </TouchableOpacity>
 
         <SettingsItem title="지역 변경" onPress={handleRegionChange} icon="🌏" />
@@ -154,14 +166,9 @@ const SettingsContainer = ({
           onPress={() => Alert.alert('오픈소스 라이선스', '출처: 공공데이터포털')}
           icon="📄"
         />
-
-        <View style={styles.versionContainer}>
-          <Text style={styles.versionTitle}>앱 버전</Text>
-          <Text style={styles.versionText}>{version}</Text>
-        </View>
       </View>
 
-      {/* 티켓 충전 다이얼로그 */}
+      {/* 티켓 충전 모달 - 실제 광고 로드/표시는 RewardAd가 담당 */}
       <Modal
         transparent
         visible={showTicketDialog}
@@ -185,7 +192,11 @@ const SettingsContainer = ({
 
               <TouchableOpacity
                 style={[styles.modalBtnSubmit, isAdLoading ? styles.modalBtnDisabled : null]}
-                onPress={() => showAd(handleAdReward)}
+                onPress={() => {
+                  // RN Modal이 떠 있으면 전면 광고 표시가 실패하므로 닫힌 뒤에 띄운다
+                  setShowTicketDialog(false);
+                  setTimeout(() => showAd(handleAdReward), 400);
+                }}
                 disabled={isAdLoading}
               >
                 <Text
@@ -198,6 +209,34 @@ const SettingsContainer = ({
                 </Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 업데이트 내역 모달 */}
+      <Modal
+        transparent
+        visible={showUpdateNotes}
+        animationType="fade"
+        onRequestClose={() => setShowUpdateNotes(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>업데이트 내용</Text>
+            <Text style={styles.updateNoteDate}>{latestUpdate.date}</Text>
+            <View style={styles.updateNoteList}>
+              {latestUpdate.details.map((line) => (
+                <Text key={line} style={styles.updateNoteLine}>
+                  • {line}
+                </Text>
+              ))}
+            </View>
+            <TouchableOpacity
+              style={[styles.modalBtnSubmit, styles.updateNoteClose]}
+              onPress={() => setShowUpdateNotes(false)}
+            >
+              <Text style={styles.modalBtnTextSubmit}>확인</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -250,57 +289,63 @@ const SettingsItem = ({
       <Text style={styles.itemIcon}>{icon}</Text>
       <Text style={styles.itemTitle}>{title}</Text>
     </View>
-    <Text style={styles.itemArrow}>›</Text>
+    <ChevronRight color={COLORS.text.muted} />
   </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 120 },
+  pageTitle: { fontSize: 24, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 16 },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     backgroundColor: COLORS.text.white,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 30,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
   },
-  avatarText: { fontSize: 20 },
-  profileInfo: { justifyContent: 'center' },
+  avatarText: { fontSize: 22 },
+  profileInfo: { flex: 1, justifyContent: 'center', marginRight: 8 },
   featureTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 2 },
-  featureDesc: { fontSize: 12, color: COLORS.text.hint, lineHeight: 18 },
-  divider: { height: 8, backgroundColor: COLORS.border },
-  menuContainer: { paddingVertical: 10, backgroundColor: COLORS.text.white, flex: 1 },
+  featureDesc: { fontSize: 14, color: COLORS.text.sub, lineHeight: 20 },
+  menuContainer: {
+    backgroundColor: COLORS.text.white,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    overflow: 'hidden',
+  },
   itemContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 24,
+    minHeight: 56,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
   itemLeft: { flexDirection: 'row', alignItems: 'center' },
   itemIcon: { fontSize: 20, marginRight: 12 },
   itemTitle: { fontSize: 16, color: COLORS.text.main },
-  itemSub: { fontSize: 12, color: COLORS.text.hint, marginTop: 2 },
-  itemArrow: { fontSize: 20, color: COLORS.text.muted },
-  versionContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    marginTop: 10,
-  },
-  versionTitle: { fontSize: 14, color: COLORS.text.sub },
-  versionText: { fontSize: 14, color: COLORS.text.sub },
+  itemSub: { fontSize: 13, color: COLORS.text.hint, marginTop: 2 },
+  updateDate: { fontSize: 13, color: COLORS.text.hint, marginTop: 4 },
+  updateNoteDate: { fontSize: 14, color: COLORS.text.hint, marginBottom: 12 },
+  updateNoteList: { alignSelf: 'stretch', marginBottom: 20 },
+  updateNoteLine: { fontSize: 14, color: COLORS.text.main, lineHeight: 22 },
+  updateNoteClose: { flex: 0, alignSelf: 'stretch', marginLeft: 0 },
 
   modalOverlay: {
     flex: 1,

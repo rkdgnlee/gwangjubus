@@ -44,6 +44,9 @@ export const useFullScreenAd = () => {
             console.error('광고 표시 실패');
             Alert.alert('알림', '광고를 불러오는 중 오류가 발생했습니다.');
             setIsAdLoading(false);
+            // 실패한 광고는 재사용할 수 없으므로 새로 로드
+            setIsAdLoaded(false);
+            preloadAd();
             break;
         }
       },
@@ -51,6 +54,8 @@ export const useFullScreenAd = () => {
         console.error('광고 표시 실패:', error);
         Alert.alert('알림', '광고를 재생할 수 없습니다.');
         setIsAdLoading(false);
+        setIsAdLoaded(false);
+        preloadAd();
       },
     });
   }, [handleAdSuccess]);

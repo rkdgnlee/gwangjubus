@@ -1,6 +1,10 @@
 import { Storage } from '@apps-in-toss/framework';
 
-const TICKET_KEY = 'search_ticket_count';
+// 🧪 TEST_ZERO_TICKETS=true 로 빌드한 테스트 번들 전용: 실제 티켓과 분리된 키를 쓰고 앱 실행마다 0개에서 시작
+const IS_TEST_ZERO_TICKETS = import.meta.env.TEST_ZERO_TICKETS === 'true';
+let testTicketsReset = false;
+
+const TICKET_KEY = IS_TEST_ZERO_TICKETS ? 'test_search_ticket_count' : 'search_ticket_count';
 
 // 🌟 이번 티켓 조정을 위한 고유 마이그레이션 키 (딱 한 번만 실행되도록 보장)
 const MIGRATION_KEY = 'migration_ticket_cap_to_50_v1'; 
@@ -40,6 +44,14 @@ export const ticketStorage = {
   },
 
   getTickets: async (): Promise<number> => {
+    if (IS_TEST_ZERO_TICKETS) {
+      if (!testTicketsReset) {
+        testTicketsReset = true;
+        await Storage.setItem(TICKET_KEY, '0');
+      }
+      return Number((await Storage.getItem(TICKET_KEY)) ?? 0);
+    }
+
     // 🔍 티켓을 읽어오기 전, 마이그레이션 대상인지 체크하고 필요시 1회 실행
     await ticketStorage.runMigrationIfNeeded();
 

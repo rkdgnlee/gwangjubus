@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Storage } from '@apps-in-toss/framework';
 import { COLORS } from '../constants/theme';
+import { CloseIcon } from './Icons';
 
 const SEEN_KEY = 'home_add_tooltip_seen';
 
@@ -29,8 +30,13 @@ export const HomeAddTooltip = () => {
       {/* <View style={styles.arrow} /> */}
       <View style={styles.bubble}>
         <Text style={styles.text}>··· 를 눌러 홈화면에 추가하고{'\n'}더 빠르게 이용해보세요</Text>
-        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-          <Text style={styles.closeText}>✕</Text>
+        <TouchableOpacity
+          onPress={handleClose}
+          style={styles.closeButton}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityLabel="안내 닫기"
+        >
+          <CloseIcon color={COLORS.text.muted} />
         </TouchableOpacity>
       </View>
     </View>
@@ -72,7 +78,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
   text: {
-    fontSize: Platform.OS === 'ios' ? 14 : 13,
+    fontSize: 14,
     color: COLORS.text.main,
     fontWeight: '600',
     lineHeight: 20,
@@ -81,9 +87,5 @@ const styles = StyleSheet.create({
   closeButton: {
     marginLeft: 8,
     padding: 2,
-  },
-  closeText: {
-    fontSize: 14,
-    color: COLORS.text.muted,
   },
 });

@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly API_STOP_URL: string;
   readonly SUPABASE_URL: string;
   readonly SUPABASE_ANON_KEY: string;
+  readonly TEST_ZERO_TICKETS: string;
   // 추가 env 변수 있으면 여기에 계속 추가
 }
 

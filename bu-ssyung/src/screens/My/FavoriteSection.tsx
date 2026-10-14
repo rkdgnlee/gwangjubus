@@ -6,6 +6,7 @@ import { useFavorites } from '../../hooks/favorites/useFavorites';
 import { COLORS } from '../../constants/theme';
 import { useFullScreenAd } from '../../hooks/ticket/useFullScreenAd';
 import { useTicket } from '../../hooks/tickets/TicketContext';
+import { ChevronDown, ChevronUp } from '../../components/Icons';
 
 interface Props {
   onNavigate: (type: 'bus' | 'stop', data: any) => void;
@@ -123,8 +124,13 @@ const FavoriteSection = ({ onNavigate }: Props) => {
           onPress={() => setIsExpanded(!isExpanded)}
         >
           <Text style={styles.moreButtonText}>
-            {isExpanded ? '접기 ▲' : `더보기 (${favorites.length}) ▼`}
+            {isExpanded ? '접기' : `더보기 (${favorites.length})`}
           </Text>
+          {isExpanded ? (
+            <ChevronUp color={COLORS.text.hint} />
+          ) : (
+            <ChevronDown color={COLORS.text.hint} />
+          )}
         </TouchableOpacity>
       )}
     </View>
@@ -146,14 +152,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FFD1D1'
   },
-  warnText: { color: '#D32F2F', fontSize: 13, fontWeight: '600', flex: 1 },
+  warnText: { color: '#D32F2F', fontSize: 14, fontWeight: '600', flex: 1 },
   
   // 👈 5. 배너 우측 버튼 영역 스타일 추가
   warnButtonsContainer: { flexDirection: 'row', alignItems: 'center' },
   warnAdBtn: {
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    minHeight: 36,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
     borderRadius: 8,
     marginRight: 6,
   },
@@ -162,14 +169,14 @@ const styles = StyleSheet.create({
   },
   warnAdBtnText: {
     color: COLORS.text.white,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
   },
   warnAdBtnTextDisabled: {
     color: COLORS.text.muted,
   },
-  closeButton: { paddingHorizontal: 8, paddingVertical: 6 },
-  closeButtonText: { color: '#888', fontSize: 13, fontWeight: '500' },
+  closeButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 8 },
+  closeButtonText: { color: COLORS.text.sub, fontSize: 14, fontWeight: '500' },
 
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 10, marginTop: 0 },
   listContent: { paddingBottom: 10 },
@@ -182,28 +189,31 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 12 : 8,
     width: '48%',
     aspectRatio: 4 / 3,
-    elevation: 1, shadowColor: '#000', shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 }, shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
   emoji: { fontSize: Platform.OS === 'ios' ? 24 : 22 },
   userTitle: { fontSize: 14, fontWeight: '700', color: COLORS.text.main, marginLeft: 6, flex: 1 },
   infoContainer: { marginTop: 'auto' },
   typeBadge: { backgroundColor: COLORS.primaryLight, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, alignSelf: 'flex-start', marginBottom: 6 },
-  typeBadgeText: { fontSize: 11, color: COLORS.primaryDark, fontWeight: '600' },
+  typeBadgeText: { fontSize: 12, color: COLORS.primaryDark, fontWeight: '600' },
   mainName: { fontSize: 16, fontWeight: '700', color: COLORS.text.main, marginBottom: Platform.OS === 'ios' ? 6 : 4 },
-  subName: { fontSize: 12, color: COLORS.text.hint },
+  subName: { fontSize: 13, color: COLORS.text.hint },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
   emptyTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 8 },
   emptyDesc: { fontSize: 14, color: COLORS.text.hint },
   moreButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 10,
+    gap: 4,
+    minHeight: 44,
     marginTop: 4,
   },
   moreButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.text.hint,
   },

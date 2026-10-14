@@ -4,6 +4,7 @@ import { IBusRideHistory } from '../../types/IBusRideHistory';
 import { Storage } from '@apps-in-toss/framework';
 import { COLORS } from '../../constants/theme';
 import { busHistoryStorage } from '../../utils/busHistoryStorage';
+import { CloseIcon } from '../../components/Icons';
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -76,8 +77,8 @@ const ScheduleSection = ({ onNavigate, setShowHistoryManage }: Props) => {
           <Text style={styles.noticeText}>
             탑승 기록은 이 기기에만 저장돼요.{'\n'}앱을 삭제하면 기록이 사라질 수 있어요.
           </Text>
-          <TouchableOpacity onPress={dismissNotice} style={styles.noticeClose}>
-            <Text style={styles.noticeCloseText}>✕</Text>
+          <TouchableOpacity onPress={dismissNotice} style={styles.noticeClose} accessibilityLabel="안내 닫기">
+            <CloseIcon color={COLORS.text.hint} />
           </TouchableOpacity>
         </View>
       )}
@@ -207,8 +208,8 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
   busNo: { fontSize: 16, fontWeight: 'bold', color: COLORS.text.main, marginBottom: 4 },
-  stopName: { fontSize: 14, color: COLORS.text.sub, marginBottom: 2 },
-  cityName: { fontSize: 12, color: COLORS.text.hint },
+  stopName: { fontSize: 15, color: COLORS.text.sub, marginBottom: 2 },
+  cityName: { fontSize: 13, color: COLORS.text.hint },
 
   noticeBanner: {
     flexDirection: 'row',
@@ -223,12 +224,11 @@ const styles = StyleSheet.create({
   noticeEmoji: { fontSize: 18, marginRight: 8 },
   noticeText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.primaryDark,
     lineHeight: 18,
   },
-  noticeClose: { padding: 4, marginLeft: 8 },
-  noticeCloseText: { fontSize: 14, color: COLORS.text.hint },
+  noticeClose: { width: 44, height: 44, marginRight: -8, justifyContent: 'center', alignItems: 'center' },
   moreButton: {
     marginTop: 8,
     paddingVertical: 14,
